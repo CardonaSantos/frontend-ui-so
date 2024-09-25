@@ -5,7 +5,8 @@ import { jwtDecode } from "jwt-decode";
 // Creamos el contexto
 type SocketContextType = Socket | null;
 const SocketContext = createContext<SocketContextType>(null);
-const API_URL = import.meta.env.VITE_API_URL;
+// const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = "wss://server-production-nest-production.up.railway.app";
 
 // Hook personalizado para acceder al contexto
 export const useSocket = () => {
@@ -31,7 +32,6 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   }, [token]);
 
   useEffect(() => {
-    // Verificamos si `user` ya tiene los datos del token antes de conectar
     if (user) {
       const newSocket = io(`${API_URL}`, {
         query: {
@@ -41,12 +41,21 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       setSocket(newSocket);
-      // Limpiamos la conexión cuando el componente se desmonta
+
+      newSocket.on("connect", () => {
+        console.log("Socket conectado:", newSocket.id);
+      });
+
+      newSocket.on("connect_error", (error) => {
+        console.error("Error en la conexión del socket:", error);
+      });
+
+      // Limpiar la conexión cuando el componente se desmonta
       return () => {
         newSocket.disconnect();
       };
     }
-  }, [user]); // Solo se ejecuta cuando el `user` está disponible
+  }, [user]);
 
   return (
     <SocketContext.Provider value={socket}>{children}</SocketContext.Provider>
