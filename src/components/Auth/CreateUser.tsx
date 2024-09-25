@@ -23,8 +23,11 @@ import { toast } from "sonner";
 
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function CreateUser() {
+  console.log("MI URL DEL SEVER CONECTADO ES:", API_URL);
+
   const navigate = useNavigate();
 
   const [comprobarContraseña, setComprobarContraseña] = useState<string>("");
@@ -68,10 +71,7 @@ export default function CreateUser() {
     }
 
     try {
-      const response = await axios.post(
-        "http://localhost:3000/users/",
-        formData
-      );
+      const response = await axios.post(`${API_URL}/users`, formData);
 
       if (response.status === 201) {
         toast.success("Usuario creado");

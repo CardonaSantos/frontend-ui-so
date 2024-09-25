@@ -17,9 +17,11 @@ import { format } from "date-fns"; // Importar differenceInMinutes también
 import { es } from "date-fns/locale"; // Importar el idioma español
 
 const API_URL = import.meta.env.VITE_API_URL;
-
+const MIURLSERVER = import.meta.env.VITE_API_URL;
 function CheckInCheckOut() {
   console.log("Esta es la api: ", API_URL);
+
+  console.log("ESTA ES MI URL DEL SERVIDOR: ", MIURLSERVER);
 
   const [user, setUser] = useState<UserToken | null>(null);
   const [registro, setRegistro] = useState<CheckInToday | null>(null);
