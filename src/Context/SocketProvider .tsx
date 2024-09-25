@@ -2,11 +2,11 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { UserToken } from "../Utils/Types/UserTokenInfo";
 import { jwtDecode } from "jwt-decode";
+
 // Creamos el contexto
 type SocketContextType = Socket | null;
 const SocketContext = createContext<SocketContextType>(null);
-// const API_URL = import.meta.env.VITE_API_URL;
-const API_URL = "wss://server-production-nest-production.up.railway.app";
+const API_URL = "wss://server-production-nest-production.up.railway.app"; // Asegúrate de que este sea el correcto
 
 // Hook personalizado para acceder al contexto
 export const useSocket = () => {
@@ -38,6 +38,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
           userId: user.sub,
           role: user.rol,
         },
+        transports: ["websocket"], // Forzar el uso de WebSocket
       });
 
       setSocket(newSocket);
@@ -47,7 +48,8 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       newSocket.on("connect_error", (error) => {
-        console.error("Error en la conexión del socket:", error);
+        console.error("Error en la conexión del socket:", error.message);
+        console.error("Detalles del error:", error);
       });
 
       // Limpiar la conexión cuando el componente se desmonta
