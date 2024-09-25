@@ -28,83 +28,24 @@ interface ConnectedUsersData {
   totalEmployees: number;
   totalAdmins: number;
 }
+// enum Rol {
+//   ADMIN,
+//   VENDEDOR,
+// }
+// interface Usuario {
+//   nombre: string;
+//   id: number;
+//   rol: Rol;
+// }
 
 interface locationReceived {
   latitud: number;
   longitud: number;
   usuarioId: number;
+  // usuario: Usuario;
 }
 
 export default function Dashboard() {
-  // const employeesData = [
-  //   {
-  //     id: 1,
-  //     name: "Alberto Jesús",
-  //     location: { lat: 15.6646, lng: -91.7121 },
-  //     status: "active",
-  //     checkIn: "08:30",
-  //     checkOut: "",
-  //     currentAppointment: {
-  //       client: "Empresa XYZ",
-  //       startTime: "09:30",
-  //       endTime: "",
-  //     },
-  //   },
-  //   {
-  //     id: 2,
-  //     name: "Mari Mileidy",
-  //     location: { lat: 15.6684, lng: -91.7104 },
-  //     status: "inactive",
-  //     checkIn: "07:45",
-  //     checkOut: "16:30",
-  //     currentAppointment: null,
-  //   },
-  //   {
-  //     id: 3,
-  //     name: "Elizabeth R.",
-  //     location: { lat: 15.6653, lng: -91.70697 },
-  //     status: "active",
-  //     checkIn: "09:00",
-  //     checkOut: "",
-  //     currentAppointment: {
-  //       client: "Tienda Local",
-  //       startTime: "10:30",
-  //       endTime: "",
-  //     },
-  //   },
-  //   {
-  //     id: 4,
-  //     name: "Fernanda M.",
-  //     location: { lat: 15.6611, lng: -91.7052 },
-  //     status: "inactive",
-  //     checkIn: "08:15",
-  //     checkOut: "17:00",
-  //     currentAppointment: null,
-  //   },
-  //   {
-  //     id: 5,
-  //     name: "Carlos Ed.",
-  //     location: { lat: 15.6532, lng: -91.7697 },
-  //     status: "active",
-  //     checkIn: "06:50",
-  //     checkOut: "",
-  //     currentAppointment: {
-  //       client: "Restaurante La Paz",
-  //       startTime: "09:00",
-  //       endTime: "",
-  //     },
-  //   },
-  //   {
-  //     id: 6,
-  //     name: "Faustina",
-  //     location: { lat: 15.6549, lng: -91.7727 },
-  //     status: "inactive",
-  //     checkIn: "07:30",
-  //     checkOut: "15:45",
-  //     currentAppointment: null,
-  //   },
-  // ];
-
   const socket = useSocket();
   const [connectedUsers, setConnectedUsers] = useState<connectedUser>();
 
@@ -137,11 +78,21 @@ export default function Dashboard() {
       const locationListener = (locationData: locationReceived) => {
         console.log("Nueva ubicación recibida:", locationData);
 
-        // Actualiza el estado y registra las ubicaciones actuales
         setLocations((prevLocations) => {
-          const updatedLocations = [...prevLocations, locationData];
-          console.log("Ubicaciones actuales:", updatedLocations);
-          return updatedLocations;
+          // Buscar si ya existe una ubicación para este usuario
+          const existingLocationIndex = prevLocations.findIndex(
+            (loc) => loc.usuarioId === locationData.usuarioId
+          );
+
+          if (existingLocationIndex !== -1) {
+            // Si existe, actualizamos la ubicación
+            const updatedLocations = [...prevLocations];
+            updatedLocations[existingLocationIndex] = locationData;
+            return updatedLocations;
+          } else {
+            // Si no existe, añadimos una nueva ubicación
+            return [...prevLocations, locationData];
+          }
         });
       };
 

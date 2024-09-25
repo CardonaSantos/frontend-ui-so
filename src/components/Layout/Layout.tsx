@@ -124,7 +124,7 @@ export default function Layout({ children }: LayoutProps) {
       // Configurar intervalo para enviar la ubicación cada 30 segundos (30000ms)
       const interval = setInterval(() => {
         sendMyLocation();
-      }, 60000); // Cambia el valor según la frecuencia deseada (milisegundos)
+      }, 45000); // Cambia el valor según la frecuencia deseada (milisegundos)
 
       setLocationInterval(interval);
 

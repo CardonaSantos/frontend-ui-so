@@ -1,50 +1,88 @@
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
-import L from "leaflet"; // Importa Leaflet para poder usar L.divIcon
+import {
+  GoogleMap,
+  useLoadScript,
+  Marker,
+  InfoWindow,
+} from "@react-google-maps/api";
+import { useState } from "react";
+
 interface locationReceived {
   latitud: number;
   longitud: number;
   usuarioId: number;
 }
 
-interface MyLeafletMapProps {
+interface MyGoogleMapProps {
   locations: locationReceived[];
 }
 
-const MyLeafletMap = ({ locations }: MyLeafletMapProps) => {
+const mapContainerStyle = {
+  height: "400px",
+  width: "100%",
+};
+
+const center = {
+  lat: 15.6646, // Coordenadas iniciales
+  lng: -91.7121,
+};
+
+const MyGoogleMap = ({ locations }: MyGoogleMapProps) => {
+  const { isLoaded, loadError } = useLoadScript({
+    googleMapsApiKey: "AIzaSyD_hzrV-YS5EaHDm-UK3jL0ny6gsJoj_18", // Tu API Key
+  });
+
+  const [selectedLocation, setSelectedLocation] =
+    useState<locationReceived | null>(null);
+
+  if (loadError) return <div>Error loading maps</div>;
+  if (!isLoaded) return <div>Loading Maps...</div>;
+
   return (
-    <MapContainer
-      center={[15.6646, -91.7121]} // Coordenadas de tu pueblo
-      zoom={13}
-      style={{ height: "400px", width: "100%", zIndex: 0 }} // Asegura que el mapa esté en un nivel bajo
-    >
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      />
+    <GoogleMap mapContainerStyle={mapContainerStyle} zoom={13} center={center}>
       {locations.map((location) => (
         <Marker
-          key={location.usuarioId} // Usar usuarioId como clave única
-          position={[location.latitud, location.longitud]} // Usar latitud y longitud de location
-          icon={L.divIcon({
-            className: "", // Quita clases innecesarias
-            html: `<div class="w-3 h-3 rounded-full bg-[#19e607]"></div>`, // Icono fijo por ahora
-            iconSize: [8, 8], // Tamaño más pequeño para solo el punto
-          })}
-        >
-          <Popup>
-            <div>
-              <h3 className="font-bold">Usuario ID: {location.usuarioId}</h3>{" "}
-              {/* Muestra el ID del usuario */}
-              <p>Estado: Activo</p>{" "}
-              {/* Suponiendo que todos están activos por ahora */}
-              {/* Aquí puedes agregar más información cuando la tengas */}
-            </div>
-          </Popup>
-        </Marker>
+          key={location.usuarioId}
+          position={{ lat: location.latitud, lng: location.longitud }}
+          onClick={() => {
+            setSelectedLocation(location); // Selecciona la localización cuando se hace clic
+          }}
+        />
       ))}
-    </MapContainer>
+
+      {selectedLocation && (
+        <InfoWindow
+          position={{
+            lat: selectedLocation.latitud,
+            lng: selectedLocation.longitud,
+          }}
+          onCloseClick={() => {
+            setSelectedLocation(null); // Cierra el InfoWindow al hacer clic en cerrar
+          }}
+        >
+          <div style={infoWindowStyle}>
+            <h3 style={infoWindowTitleStyle}>
+              Usuario ID: {selectedLocation.usuarioId}
+            </h3>
+          </div>
+        </InfoWindow>
+      )}
+    </GoogleMap>
   );
 };
 
-export default MyLeafletMap;
+const infoWindowStyle: React.CSSProperties = {
+  padding: "5px",
+  backgroundColor: "#fff",
+  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
+  borderRadius: "8px",
+  maxWidth: "200px",
+  position: "relative", // Para posicionar el botón de cierre
+};
+
+const infoWindowTitleStyle: React.CSSProperties = {
+  margin: "0 0 5px 0",
+  fontSize: "16px",
+  fontWeight: "bold",
+};
+
+export default MyGoogleMap;

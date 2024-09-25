@@ -176,3 +176,6 @@ button:focus-visible {
     @apply bg-background text-foreground;
   }
 }
+.custom-info-window .gm-style-iw + div {
+  display: none; /* Oculta el botón de cierre predeterminado */
+}
