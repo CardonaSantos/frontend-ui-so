@@ -6,7 +6,10 @@ import { jwtDecode } from "jwt-decode";
 // Creamos el contexto
 type SocketContextType = Socket | null;
 const SocketContext = createContext<SocketContextType>(null);
-const API_URL = "wss://server-production-nest-production.up.railway.app"; // Asegúrate de que este sea el correcto
+// const API_URL = "wss://server-production-nest-production.up.railway.app"; // Asegúrate de que este sea el correcto
+// const API_URL = "http://localhost:3000/";
+const API_URL = import.meta.env.VITE_API_URL;
+// const MIURLSERVER = import.meta.env.VITE_API_URL;
 
 // Hook personalizado para acceder al contexto
 export const useSocket = () => {
@@ -18,6 +21,8 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<UserToken | null>(null);
   const [socket, setSocket] = useState<SocketContextType>(null);
   const token = localStorage.getItem("authToken");
+
+  console.log("La data del token del user es:", user);
 
   useEffect(() => {
     if (token) {

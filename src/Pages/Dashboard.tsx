@@ -136,16 +136,18 @@ export default function Dashboard() {
     if (socket) {
       const locationListener = (locationData: locationReceived) => {
         console.log("Nueva ubicación recibida:", locationData);
-        // Aquí puedes actualizar el estado con la nueva ubicación
-        // Por ejemplo, si tienes un estado para guardar las localizaciones:
-        setLocations((prevLocations) => [...prevLocations, locationData]);
+
+        // Actualiza el estado y registra las ubicaciones actuales
+        setLocations((prevLocations) => {
+          const updatedLocations = [...prevLocations, locationData];
+          console.log("Ubicaciones actuales:", updatedLocations);
+          return updatedLocations;
+        });
       };
 
-      // Escuchar el evento de recepción de ubicación
       socket.on("receiveLocation", locationListener);
 
       return () => {
-        // Limpiar el listener al desmontar el componente
         socket.off("receiveLocation", locationListener);
       };
     }
