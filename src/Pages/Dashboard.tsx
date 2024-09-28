@@ -28,21 +28,35 @@ interface ConnectedUsersData {
   totalEmployees: number;
   totalAdmins: number;
 }
-// enum Rol {
-//   ADMIN,
-//   VENDEDOR,
-// }
-// interface Usuario {
-//   nombre: string;
-//   id: number;
-//   rol: Rol;
-// }
+
+enum Rol {
+  ADMIN,
+  VENDEDOR,
+}
+interface Usuario {
+  nombre: string;
+  id: number;
+  rol: Rol;
+  prospectos: Prospectos[];
+}
+enum Estado {
+  EN_PROSPECTO = "EN_PROSPECTO",
+  FINALIZADO = "FINALIZADO",
+  CANCELADO = "CANCELADO",
+}
+
+interface Prospectos {
+  estado: Estado;
+  inicio: string;
+  nombreCompleto: string;
+  empresaTienda: string;
+}
 
 interface locationReceived {
   latitud: number;
   longitud: number;
   usuarioId: number;
-  // usuario: Usuario;
+  usuario: Usuario;
 }
 
 export default function Dashboard() {
@@ -158,7 +172,7 @@ export default function Dashboard() {
               </div>
             </CardContent>
           </Card>
-
+          {/* 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
@@ -169,7 +183,7 @@ export default function Dashboard() {
             <CardContent>
               <div className="text-2xl font-bold">4</div>
             </CardContent>
-          </Card>
+          </Card> */}
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -299,55 +313,6 @@ export default function Dashboard() {
                 <MyLeafletMap locations={locations} />
               </div>
             </div>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nombre</TableHead>
-                  <TableHead>Ubicación</TableHead>
-                  <TableHead>Estado</TableHead>
-
-                  <TableHead>Acción</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow>
-                  <TableCell>María González</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">
-                      <a
-                        href={`https://www.google.com/maps?q=15.6646,-91.7121`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center"
-                      >
-                        <MapPin className="w-4 h-4 mr-1" />
-                        15.6646, -91.7121
-                      </a>
-                    </Badge>
-                  </TableCell>
-
-                  <TableCell>
-                    <Badge
-                      variant="default"
-                      className={
-                        "bg-green-500 text-white" // Para "Activo"
-                      }
-                    >
-                      Activo
-                    </Badge>
-                  </TableCell>
-
-                  <TableCell>
-                    <Link to={"/empleados"}>
-                      <Button variant="outline" size="sm">
-                        Ver detalles
-                      </Button>
-                    </Link>
-                  </TableCell>
-                </TableRow>
-                {/* Add more rows as needed */}
-              </TableBody>
-            </Table>
           </CardContent>
         </Card>
       </main>

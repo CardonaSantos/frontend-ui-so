@@ -6,10 +6,35 @@ import {
 } from "@react-google-maps/api";
 import { useState } from "react";
 
+enum Rol {
+  ADMIN,
+  VENDEDOR,
+}
+interface Usuario {
+  nombre: string;
+  id: number;
+  rol: Rol;
+  prospectos: Prospectos[];
+}
+
+enum Estado {
+  EN_PROSPECTO = "EN_PROSPECTO",
+  FINALIZADO = "FINALIZADO",
+  CANCELADO = "CANCELADO",
+}
+
+interface Prospectos {
+  estado: Estado;
+  inicio: string;
+  nombreCompleto: string;
+  empresaTienda: string;
+}
+
 interface locationReceived {
   latitud: number;
   longitud: number;
   usuarioId: number;
+  usuario: Usuario;
 }
 
 interface MyGoogleMapProps {
@@ -37,8 +62,35 @@ const MyGoogleMap = ({ locations }: MyGoogleMapProps) => {
   if (loadError) return <div>Error loading maps</div>;
   if (!isLoaded) return <div>Loading Maps...</div>;
 
+  // const prospectos = locations.map((pros) => pros.prospectos);
+
+  console.log("Las localizaciones son: ", locations);
+
+  // Cambia esta línea:
+  // const prospectos = locations.map((pros) => pros.prospectos);
+
+  // A esto:
+  const prospectos = locations.map((loc) => loc.usuario.prospectos);
+
+  const mapOptions = {
+    mapTypeControl: true, // Habilita el control de tipo de mapa
+    mapTypeControlOptions: {
+      style: window.google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+      position: window.google.maps.ControlPosition.TOP_LEFT, // Ajusta la posición del control
+    },
+    streetViewControl: false,
+    fullscreenControl: true,
+  };
+
   return (
-    <GoogleMap mapContainerStyle={mapContainerStyle} zoom={13} center={center}>
+    // <GoogleMap mapContainerStyle={mapContainerStyle} zoom={13} center={center}>
+
+    <GoogleMap
+      mapContainerStyle={mapContainerStyle}
+      zoom={13}
+      center={center}
+      options={mapOptions} // Agrega las opciones aquí
+    >
       {locations.map((location) => (
         <Marker
           key={location.usuarioId}
@@ -59,10 +111,47 @@ const MyGoogleMap = ({ locations }: MyGoogleMapProps) => {
             setSelectedLocation(null); // Cierra el InfoWindow al hacer clic en cerrar
           }}
         >
-          <div style={infoWindowStyle}>
+          <div>
             <h3 style={infoWindowTitleStyle}>
-              Usuario ID: {selectedLocation.usuarioId}
+              {selectedLocation.usuario.nombre}
             </h3>
+            <h3 style={infoWindowTitleStyle}>
+              Rol: {selectedLocation.usuario.rol}
+            </h3>
+
+            {/* Muestra los prospectos si existen */}
+            {selectedLocation.usuario.prospectos &&
+            selectedLocation.usuario.prospectos.length > 0 ? (
+              selectedLocation.usuario.prospectos.map((pros, index) => (
+                <div key={index}>
+                  <h3 style={infoWindowTitleStyle}>
+                    {pros.estado === Estado.EN_PROSPECTO
+                      ? `En prospecto con ${
+                          pros.nombreCompleto && pros.empresaTienda
+                            ? `${pros.nombreCompleto} de ${pros.empresaTienda}`
+                            : pros.nombreCompleto
+                            ? pros.nombreCompleto
+                            : pros.empresaTienda
+                            ? pros.empresaTienda
+                            : "Información no disponible"
+                        }`
+                      : pros.estado === Estado.FINALIZADO
+                      ? `Finalizando prospecto con ${
+                          pros.nombreCompleto
+                            ? pros.nombreCompleto
+                            : "Cliente desconocido"
+                        }`
+                      : "Prospecto Cancelado"}
+                  </h3>
+                  <h3 style={infoWindowTitleStyle}>
+                    Comenzó: {new Date(pros.inicio).toLocaleDateString()} a las{" "}
+                    {new Date(pros.inicio).toLocaleTimeString()}
+                  </h3>
+                </div>
+              ))
+            ) : (
+              <h3>No hay prospectos activos</h3>
+            )}
           </div>
         </InfoWindow>
       )}

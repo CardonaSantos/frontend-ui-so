@@ -259,6 +259,9 @@ export default function MakeSale() {
   const clearCart = () => {
     setCart([]); // Asume que estás usando `setCart` para actualizar el carrito
   };
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const sendCartData = async (cart: (Producto & { quantity: number })[]) => {
     const formateado = formatoCartData(cart);
 
@@ -278,15 +281,19 @@ export default function MakeSale() {
     }
 
     try {
+      setIsSubmitting(true); // Deshabilitar el botón
       console.log(formateado);
       const response = await axios.post(`${API_URL}/sale`, formateado);
       if (response.status === 200 || response.status === 201) {
         toast.success("Venta creada");
         clearCart();
+        setIsSubmitting(false); // Habilitar el botón si la venta es exitosa
+        setShowCartModal(false); // Opcional: cerrar el modal si la venta es exitosa
       }
     } catch (error) {
       console.log(error);
       toast.error("Error al crear venta");
+      setIsSubmitting(false); // Rehabilitar el botón si hay un error
     }
   };
 
@@ -423,8 +430,9 @@ export default function MakeSale() {
                       <Button
                         variant="outline"
                         onClick={() => sendCartData(cart)}
+                        disabled={isSubmitting} // Deshabilitar el botón mientras se envía la venta
                       >
-                        Hacer venta
+                        {isSubmitting ? "Procesando..." : "Hacer venta"}
                       </Button>
                     </div>
                   </DialogFooter>

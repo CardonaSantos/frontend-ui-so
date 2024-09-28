@@ -28,6 +28,11 @@ import CheckInCheckOut from "./Pages/CheckInCheckOut";
 import CrearCategoria from "./Pages/CrearCategoria";
 import CrearProveedor from "./Pages/CrearProveedor";
 import StockDeliveryRecords from "./Pages/StockDeliveryRecords";
+import CreateClient from "./Pages/CreateClient";
+import Prospecto from "./Pages/Prospecto";
+import ProspectoForm from "./Pages/ProspectoForm";
+import ProspectoFormulario from "./Pages/ProspectoFormulario";
+import ProspectoHistorial from "./Pages/ProspectoHistorial";
 
 function App() {
   return (
@@ -68,10 +73,19 @@ function App() {
 
             <Route path="/crear-categoria" element={<CrearCategoria />} />
             <Route path="/crear-proveedor" element={<CrearProveedor />} />
+            <Route path="/crear-cliente" element={<CreateClient />} />
 
             <Route
               path="/registro-entregas"
               element={<StockDeliveryRecords />}
+            />
+
+            <Route path="/visita" element={<Prospecto />} />
+
+            <Route path="/prospecto" element={<ProspectoFormulario />} />
+            <Route
+              path="/prospecto/historial"
+              element={<ProspectoHistorial />}
             />
           </Route>
         </Routes>

@@ -22,6 +22,9 @@ import {
   UserCheck,
   Tag,
   ClipboardList,
+  UserPlus,
+  FileText,
+  MapPin,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -99,23 +102,25 @@ export default function Layout({ children }: LayoutProps) {
   }, []);
 
   const sendMyLocation = async () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((position) => {
-        const { latitude, longitude } = position.coords;
+    if (tokenUser?.rol == "VENDEDOR") {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+          const { latitude, longitude } = position.coords;
 
-        if (socket && tokenUser) {
-          const locationData = {
-            latitud: latitude,
-            longitud: longitude,
-            usuarioId: tokenUser.sub,
-          };
+          if (socket && tokenUser) {
+            const locationData = {
+              latitud: latitude,
+              longitud: longitude,
+              usuarioId: tokenUser.sub,
+            };
 
-          console.log("Enviando ubicación:", locationData);
-          socket.emit("sendLocation", locationData);
-        }
-      });
-    } else {
-      console.error("Geolocation no está disponible en este navegador.");
+            console.log("Enviando ubicación:", locationData);
+            socket.emit("sendLocation", locationData);
+          }
+        });
+      } else {
+        console.error("Geolocation no está disponible en este navegador.");
+      }
     }
   };
 
@@ -124,7 +129,7 @@ export default function Layout({ children }: LayoutProps) {
       // Configurar intervalo para enviar la ubicación cada 30 segundos (30000ms)
       const interval = setInterval(() => {
         sendMyLocation();
-      }, 45000); // Cambia el valor según la frecuencia deseada (milisegundos)
+      }, 10000); // Cambia el valor según la frecuencia deseada (milisegundos)
 
       setLocationInterval(interval);
 
@@ -136,6 +141,7 @@ export default function Layout({ children }: LayoutProps) {
       };
     }
   }, [socket, tokenUser]);
+
   // 60000
   // 90000
 
@@ -263,6 +269,35 @@ export default function Layout({ children }: LayoutProps) {
               </Link>
             </li>
 
+            <li>
+              <Link
+                to="/crear-cliente"
+                className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
+              >
+                <UserPlus className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+                <span>Añadir cliente</span>
+              </Link>
+            </li>
+
+            <li>
+              <Link
+                to="/visita"
+                className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
+              >
+                <MapPin className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+                <span>Visita</span>
+              </Link>
+            </li>
+
+            <li>
+              <Link
+                to="/prospecto"
+                className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
+              >
+                <FileText className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+                <span>Prospecto</span>
+              </Link>
+            </li>
             {/* Productos Collapsible Section */}
             <Collapsible>
               <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 bg-gray-200 dark:bg-gray-800">
@@ -460,6 +495,26 @@ export default function Layout({ children }: LayoutProps) {
                     >
                       <ClipboardList className="h-5 w-5 text-gray-600 dark:text-gray-300" />
                       <span>Registro de entregas</span>
+                    </Link>
+                  </li>
+
+                  <li>
+                    <Link
+                      to="/visita"
+                      className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
+                    >
+                      <MapPin className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+                      <span>Visita</span>
+                    </Link>
+                  </li>
+
+                  <li>
+                    <Link
+                      to="/prospecto"
+                      className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
+                    >
+                      <FileText className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+                      <span>Prospecto</span>
                     </Link>
                   </li>
 

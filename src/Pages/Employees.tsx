@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+// import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import { Clock, MapPin, User, Calendar } from "lucide-react";
-import L from "leaflet";
+// import L from "leaflet";
 
 // Asegúrate de importar los estilos de Leaflet
 import "leaflet/dist/leaflet.css";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -18,7 +18,25 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { useSocket } from "@/Context/SocketProvider ";
+import MyLeafletMap from "../components/Map/Map";
 
+enum Rol {
+  ADMIN,
+  VENDEDOR,
+}
+interface Usuario {
+  nombre: string;
+  id: number;
+  rol: Rol;
+}
+
+interface locationReceived {
+  latitud: number;
+  longitud: number;
+  usuarioId: number;
+  usuario: Usuario;
+}
 // Datos de ejemplo (en una aplicación real, estos vendrían de una API)
 const employeesData = [
   {
@@ -90,62 +108,58 @@ const employeesData = [
 ];
 
 export default function Employees() {
+  const socket = useSocket();
+
   const [employees, setEmployees] = useState(employeesData);
+  const [locations, setLocations] = useState<locationReceived[]>([]);
 
-  // En una aplicación real, aquí se actualizarían los datos en tiempo real
   useEffect(() => {
-    // Simular actualización de datos cada 5 segundos
-    const interval = setInterval(() => {
-      // Aquí iría la lógica para obtener datos actualizados de la API
-      // Por ahora, solo actualizamos el estado con los mismos datos
-      setEmployees([...employeesData]);
-    }, 5000);
+    if (socket) {
+      const locationListener = (locationData: locationReceived) => {
+        console.log("Nueva ubicación recibida:", locationData);
 
-    return () => clearInterval(interval);
-  }, []);
+        setLocations((prevLocations) => {
+          // Buscar si ya existe una ubicación para este usuario
+          const existingLocationIndex = prevLocations.findIndex(
+            (loc) => loc.usuarioId === locationData.usuarioId
+          );
+
+          if (existingLocationIndex !== -1) {
+            // Si existe, actualizamos la ubicación
+            const updatedLocations = [...prevLocations];
+            updatedLocations[existingLocationIndex] = locationData;
+            return updatedLocations;
+          } else {
+            // Si no existe, añadimos una nueva ubicación
+            return [...prevLocations, locationData];
+          }
+        });
+      };
+
+      socket.on("receiveLocation", locationListener);
+
+      return () => {
+        socket.off("receiveLocation", locationListener);
+      };
+    }
+  }, [socket]);
 
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Seguimiento de Empleados</h1>
 
-      <Card className="mb-8 relative">
+      {/* Active Employees Section */}
+      <Card className="mt-8">
+        <CardHeader>
+          <CardTitle>Empleados Activos</CardTitle>
+        </CardHeader>
         <CardContent>
-          <MapContainer
-            center={[15.6646, -91.7121]} // Coordenadas de tu pueblo
-            zoom={13}
-            style={{ height: "400px", width: "100%", zIndex: 0 }} // Asegura que el mapa esté en un nivel bajo
-          >
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            />
-            {employees.map((employee) => (
-              <Marker
-                key={employee.id}
-                position={[employee.location.lat, employee.location.lng]}
-                icon={L.divIcon({
-                  className: "", // Quita clases innecesarias
-                  html: `<div class="w-3   h-3 rounded-full ${
-                    employee.status === "active" ? "bg-green-500" : "bg-red-500"
-                  }"></div>`,
-                  iconSize: [8, 8], // Tamaño más pequeño para solo el punto
-                })}
-              >
-                <Popup>
-                  <div>
-                    <h3 className="font-bold">{employee.name}</h3>
-                    <p>
-                      Estado:{" "}
-                      {employee.status === "active" ? "Activo" : "Inactivo"}
-                    </p>
-                    {employee.currentAppointment && (
-                      <p>En cita con: {employee.currentAppointment.client}</p>
-                    )}
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
-          </MapContainer>
+          <div className="aspect-video bg-gray-200 dark:bg-gray-700 rounded-lg mb-4 relative overflow-hidden">
+            {/* Placeholder for map */}
+            <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
+              <MyLeafletMap locations={locations} />
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -154,7 +168,6 @@ export default function Employees() {
         <TableHeader>
           <TableRow>
             <TableHead>Nombre</TableHead>
-            <TableHead>Ubicación</TableHead>
             <TableHead>Estado</TableHead>
             <TableHead>Entrada</TableHead>
             <TableHead>Salida</TableHead>
@@ -163,43 +176,30 @@ export default function Employees() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {employees.map((employee) => (
-            <TableRow key={employee.id}>
-              <TableCell>{employee.name}</TableCell>
-              <TableCell>
-                <a
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  href={`https://www.google.com/maps?q=${employee.location.lat},${employee.location.lng}`}
-                >
-                  <Badge className="text-blue-500" variant="outline">
-                    <MapPin className="w-4 h-4 mr-1" />
-                    {employee.location.lat.toFixed(4)},{" "}
-                    {employee.location.lng.toFixed(4)}
-                  </Badge>
-                </a>
-              </TableCell>
+          {locations.map((loc, index) => (
+            <TableRow key={index}>
+              <TableCell>{loc.usuario.nombre}</TableCell>
+
               <TableCell>
                 <Badge
                   variant="default"
                   className={
-                    employee.status === "active"
-                      ? "bg-green-500 text-white" // Para "Activo"
-                      : "bg-red-500 text-white" // Para "Inactivo"
+                    "bg-green-500 text-white" // Para "Activo"
                   }
                 >
-                  {employee.status === "active" ? "Activo" : "Inactivo"}
+                  Activo
                 </Badge>
               </TableCell>
               <TableCell>
                 <Clock className="w-4 h-4 inline mr-1" />
-                {employee.checkIn}
+                {loc.usuario.nombre}
               </TableCell>
               <TableCell>
                 <Clock className="w-4 h-4 inline mr-1" />
-                {employee.checkOut || "En progreso"}
+                {/* {employee.checkOut || "En progreso"} */}
+                {loc.usuario.nombre || "En progreso"}
               </TableCell>
-              <TableCell>
+              {/* <TableCell>
                 {employee.currentAppointment ? (
                   <div>
                     <Badge variant="secondary">
@@ -216,7 +216,7 @@ export default function Employees() {
                 ) : (
                   "Sin cita"
                 )}
-              </TableCell>
+              </TableCell> */}
               {/* <TableCell>
                 <Button variant="outline" size="sm">
                   Ver detalles
