@@ -156,7 +156,7 @@ export default function Layout({ children }: LayoutProps) {
           <div className="flex h-14 items-center border-b px-4 bg-gray-200 dark:bg-gray-900">
             <Link to={"/"}>
               <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                Sistema V1
+                Demo{" "}
               </h1>
             </Link>
             <Link to={"/"}>
@@ -595,7 +595,7 @@ export default function Layout({ children }: LayoutProps) {
               </nav>
             </SheetContent>
           </Sheet>
-          <h1 className="text-lg font-semibold lg:hidden">My App</h1>
+          <h1 className="text-lg font-semibold lg:hidden">Demo</h1>
           <div className="ml-auto flex items-center space-x-4">
             <Dialog>
               <DialogTrigger asChild>
