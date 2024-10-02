@@ -107,25 +107,23 @@ export default function Layout({ children }: LayoutProps) {
   }, []);
 
   const sendMyLocation = async () => {
-    if (tokenUser?.rol == "VENDEDOR") {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition((position) => {
-          const { latitude, longitude } = position.coords;
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        const { latitude, longitude } = position.coords;
 
-          if (socket && tokenUser) {
-            const locationData = {
-              latitud: latitude,
-              longitud: longitude,
-              usuarioId: tokenUser.sub,
-            };
+        if (socket && tokenUser) {
+          const locationData = {
+            latitud: latitude,
+            longitud: longitude,
+            usuarioId: tokenUser.sub,
+          };
 
-            console.log("Enviando ubicación:", locationData);
-            socket.emit("sendLocation", locationData);
-          }
-        });
-      } else {
-        console.error("Geolocation no está disponible en este navegador.");
-      }
+          console.log("Enviando ubicación:", locationData);
+          socket.emit("sendLocation", locationData);
+        }
+      });
+    } else {
+      console.error("Geolocation no está disponible en este navegador.");
     }
   };
 
