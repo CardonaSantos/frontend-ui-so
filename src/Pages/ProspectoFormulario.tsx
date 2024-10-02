@@ -6,11 +6,12 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import {
   Card,
@@ -23,29 +24,55 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { jwtDecode } from "jwt-decode";
 import { UserToken } from "@/Utils/Types/UserTokenInfo";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 //-------------
+// Interfaz para Prospecto
 interface Prospecto {
   id: number;
-  inicio: string; // Puedes usar Date si prefieres manejar fechas
-  fin: string | null; // Puede ser una fecha o null
+  inicio: string; // Fecha en formato ISO
+  fin: string | null; // Puede ser null si aún está activo
   usuarioId: number;
-
+  clienteId: number | null; // Puede ser null si no está asociado a un cliente
   nombreCompleto: string;
   empresaTienda: string;
   telefono: string | null;
   correo: string | null;
-
-  creadoEn: string; // Puedes usar Date si prefieres manejar fechas
-  actualizadoEn: string; // Puedes usar Date si prefieres manejar fechas
-  estado: "EN_PROSPECTO" | string; // Puedes añadir otros estados si los conoces
+  direccion: string;
+  departamentoId: number; // Referencia al ID del departamento
+  municipioId: number; // Referencia al ID del municipio
+  estado: string; // Podría ser un enum para estados específicos
+  preferenciaContacto: string | null;
+  presupuestoMensual: number | null;
+  volumenCompra: number | null;
+  categoriasInteres: string[]; // O una interfaz para una categoría si tienes más detalles
+  comentarios: string | null;
+  creadoEn: string; // Fecha en formato ISO
+  actualizadoEn: string; // Fecha en formato ISO
+  departamento?: Departamento; // Opcional, si deseas incluir la relación
+  municipio?: Municipio; // Opcional, si deseas incluir la relación
 }
 
+interface Departamento {
+  id: number;
+  nombre: string;
+}
+
+interface Municipio {
+  id: number;
+  nombre: string;
+}
 // Tipo para nuestro formulario
 type FormData = {
   nombreCompleto: string;
   empresaTienda: string;
   telefono: string;
-  correoElectronico: string;
+  correo: string;
   direccion: string;
   municipio: string;
   departamento: string;
@@ -56,33 +83,14 @@ type FormData = {
   preferenciaContacto: string;
   comentarios: string;
   fin: string;
+  //ubiccaciones
+  departamentoId: number;
+  municipioId: number;
+  // latitud: ,
+  // longitud: null,
+  latitud?: number; // Aquí se define como number
+  longitud?: number; // Aquí se define como number
 };
-
-// Lista de departamentos de Guatemala
-const departamentos = [
-  "Alta Verapaz",
-  "Baja Verapaz",
-  "Chimaltenango",
-  "Chiquimula",
-  "El Progreso",
-  "Escuintla",
-  "Guatemala",
-  "Huehuetenango",
-  "Izabal",
-  "Jalapa",
-  "Jutiapa",
-  "Petén",
-  "Quetzaltenango",
-  "Quiché",
-  "Retalhuleu",
-  "Sacatepéquez",
-  "San Marcos",
-  "Santa Rosa",
-  "Sololá",
-  "Suchitepéquez",
-  "Totonicapán",
-  "Zacapa",
-];
 
 const fechaHoraGuatemala = new Date().toLocaleString("es-GT", {
   timeZone: "America/Guatemala",
@@ -93,7 +101,7 @@ export default function ProspectoFormulario() {
     nombreCompleto: "",
     empresaTienda: "",
     telefono: "",
-    correoElectronico: "",
+    correo: "",
     direccion: "",
     municipio: "",
     departamento: "",
@@ -104,11 +112,39 @@ export default function ProspectoFormulario() {
     preferenciaContacto: "",
     comentarios: "",
     fin: fechaHoraGuatemala,
+    municipioId: 0,
+    departamentoId: 0,
+    //-----------------------
+    latitud: 0,
+    longitud: 0,
   });
+
+  const handleGetLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setFormData({
+            ...formData,
+            latitud: position.coords.latitude, // Esto será un número
+            longitud: position.coords.longitude, // Esto será un número
+          });
+          toast.success("Ubicación obtenida exitosamente");
+        },
+        (error) => {
+          console.log(error);
+          toast.error("Error al obtener la ubicación");
+        }
+      );
+      console.log("El form data con la latitud y lng es: ", formData);
+    } else {
+      toast.error("La geolocalización no es compatible con este navegador.");
+    }
+  };
+
   const [errors, setErrors] = useState<Partial<FormData>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
+  // const [submitSuccess, setSubmitSuccess] = useState(false);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -136,46 +172,46 @@ export default function ProspectoFormulario() {
     }));
   };
 
-  const validateForm = () => {
-    const newErrors: Partial<FormData> = {};
-    if (!formData.nombreCompleto)
-      newErrors.nombreCompleto = "Este campo es requerido";
-    if (!formData.telefono) newErrors.telefono = "Este campo es requerido";
-    if (!formData.municipio) newErrors.municipio = "Este campo es requerido";
-    if (!formData.departamento)
-      newErrors.departamento = "Este campo es requerido";
-    if (!formData.tipoCliente)
-      newErrors.tipoCliente = "Este campo es requerido";
-    if (
-      formData.correoElectronico &&
-      !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(
-        formData.correoElectronico
-      )
-    ) {
-      newErrors.correoElectronico = "Dirección de correo inválida";
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  // const validateForm = () => {
+  //   const newErrors: Partial<FormData> = {};
+  //   if (!formData.nombreCompleto)
+  //     newErrors.nombreCompleto = "Este campo es requerido";
+  //   if (!formData.telefono) newErrors.telefono = "Este campo es requerido";
+  //   if (!formData.municipio) newErrors.municipio = "Este campo es requerido";
+  //   if (!formData.departamento)
+  //     newErrors.departamento = "Este campo es requerido";
+  //   if (!formData.tipoCliente)
+  //     newErrors.tipoCliente = "Este campo es requerido";
+  //   if (
+  //     formData.correoElectronico &&
+  //     !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(
+  //       formData.correoElectronico
+  //     )
+  //   ) {
+  //     newErrors.correoElectronico = "Dirección de correo inválida";
+  //   }
+  //   setErrors(newErrors);
+  //   return Object.keys(newErrors).length === 0;
+  // };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!validateForm()) return;
+  // const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  //   e.preventDefault();
+  //   if (!validateForm()) return;
 
-    setIsSubmitting(true);
-    setSubmitError(null);
-    try {
-      // Aquí iría la llamada real a tu API
-      await axios.post("/api/prospectos", formData);
-      setSubmitSuccess(true);
-    } catch (error) {
-      setSubmitError(
-        "Hubo un error al enviar el formulario. Por favor, intente de nuevo."
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  //   setIsSubmitting(true);
+  //   setSubmitError(null);
+  //   try {
+  //     // Aquí iría la llamada real a tu API
+  //     await axios.post("/api/prospectos", formData);
+  //     setSubmitSuccess(true);
+  //   } catch (error) {
+  //     setSubmitError(
+  //       "Hubo un error al enviar el formulario. Por favor, intente de nuevo."
+  //     );
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
   //-------------------------------------------------
   const API_URL = import.meta.env.VITE_API_URL;
   const token = localStorage.getItem("authToken");
@@ -203,6 +239,7 @@ export default function ProspectoFormulario() {
       }
       const prospecto: Prospecto = await response.json();
       setProspectBoolean(true);
+
       return prospecto;
     } catch (error) {
       console.error("Error:", error);
@@ -210,39 +247,63 @@ export default function ProspectoFormulario() {
       return null; // Devuelve null si hay un error
     }
   }
+  console.log("El last prospecto es: ", prospectoAbierto);
 
+  // Cargar prospecto abierto
   useEffect(() => {
     const getLastProspecto = async () => {
       if (vendedor?.sub) {
         try {
-          const lastProspecto = await fetchLastProspecto(vendedor.sub);
+          const lastProspecto: Prospecto | null = await fetchLastProspecto(
+            vendedor.sub
+          );
           if (lastProspecto) {
             setProspectoAbierto(lastProspecto);
-            // Actualiza los campos del formulario si existe un prospecto abierto
             setFormData((prevFormData) => ({
               ...prevFormData,
               nombreCompleto: lastProspecto.nombreCompleto || "",
               empresaTienda: lastProspecto.empresaTienda || "",
               telefono: lastProspecto.telefono || "",
-              correoElectronico: lastProspecto.correo || "", // Correo correcto
-              // Puedes seguir actualizando otros campos aquí si es necesario
+              correoElectronico: lastProspecto.correo || "",
+              direccion: lastProspecto.direccion || "",
+              municipioId: lastProspecto.municipioId || 0,
+              departamentoId: lastProspecto.departamentoId || 0,
+              municipio: lastProspecto.municipio?.nombre || "", // Asignar nombre del municipio
+              departamento: lastProspecto.departamento?.nombre || "", // Asignar nombre del departamento
+              fin: lastProspecto.fin || fechaHoraGuatemala, // Si aún no está cerrado
+              // Rellena otros campos si es necesario
             }));
-            setProspectBoolean(true); // Solo marca como true si hay un prospecto abierto
           } else {
-            // No hay un prospecto abierto
-            setProspectoAbierto(null);
-            setProspectBoolean(false);
+            // Manejar caso en que no hay prospecto
+            setFormData({
+              nombreCompleto: "",
+              empresaTienda: "",
+              telefono: "",
+              correo: "",
+              direccion: "",
+              municipio: "",
+              departamento: "",
+              tipoCliente: "",
+              categoriasInteres: [],
+              volumenCompra: "",
+              presupuestoMensual: "",
+              preferenciaContacto: "",
+              comentarios: "",
+              fin: fechaHoraGuatemala,
+              municipioId: 0,
+              departamentoId: 0,
+            });
           }
         } catch (error) {
           console.error("Error al obtener el prospecto:", error);
-          // Manejo de errores, en caso de que falle la obtención del prospecto
-          setProspectoAbierto(null);
-          setProspectBoolean(false);
+          // Manejar error
         }
       }
     };
 
-    getLastProspecto();
+    if (vendedor?.sub) {
+      getLastProspecto(); // Asegurarse que getLastProspecto funcione bien
+    }
   }, [vendedor?.sub]);
 
   console.log(formData);
@@ -250,28 +311,60 @@ export default function ProspectoFormulario() {
   const handleFinishProspect = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    if (
+      !formData.tipoCliente ||
+      !formData.nombreCompleto ||
+      !formData.empresaTienda ||
+      !formData.direccion
+    ) {
+      toast.warning("Algunos campos son necesarios");
+      return;
+    }
+
     if (!formData.tipoCliente) {
       toast.warning("Especifique el tipo de cliente");
     }
 
     try {
+      console.log("enviando.....");
+      console.log({
+        nombreCompleto: formData.nombreCompleto,
+        empresaTienda: formData.empresaTienda,
+        telefono: formData.telefono,
+        correo: formData.correo,
+        direccion: formData.direccion,
+        tipoCliente: formData.tipoCliente,
+        categoriasInteres: formData.categoriasInteres,
+        volumenCompra: formData.volumenCompra,
+        presupuestoMensual: formData.presupuestoMensual,
+        preferenciaContacto: formData.preferenciaContacto,
+        comentarios: formData.comentarios,
+        //
+      });
+
+      console.log("El id del prospecto abierto es: ", prospectoAbierto?.id);
+
       const response = await axios.patch(
         `${API_URL}/prospecto/actualizar-prospecto/${prospectoAbierto?.id}`,
         {
           nombreCompleto: formData.nombreCompleto,
           empresaTienda: formData.empresaTienda,
           telefono: formData.telefono,
-          correo: formData.correoElectronico,
-          direccion: formData.direccion,
-          municipio: formData.municipio,
-          departamento: formData.departamento,
+          correo: formData.correo,
           tipoCliente: formData.tipoCliente,
           categoriasInteres: formData.categoriasInteres,
           volumenCompra: formData.volumenCompra,
           presupuestoMensual: formData.presupuestoMensual,
           preferenciaContacto: formData.preferenciaContacto,
           comentarios: formData.comentarios,
-          //   fin: fechaHoraGuatemala,
+          fin: fechaHoraGuatemala,
+          estado: "FINALIZADO",
+          departamentoId: formData.departamentoId,
+          municipioId: formData.municipioId,
+          latitud: formData.latitud,
+          longitud: formData.longitud,
+
+          // latitud: formData.la
         }
       );
       if (response.status === 200 || response.status === 201) {
@@ -283,25 +376,38 @@ export default function ProspectoFormulario() {
       toast.error("Error al actualizar y finalizar prosecto");
     }
   };
+  const postProspecto = async () => {
+    // Validaciones mínimas
+    if (!formData.nombreCompleto && !formData.empresaTienda) {
+      toast.info(
+        "Se necesita al menos un referente (nombre completo o empresa/tienda)"
+      );
+      return;
+    }
 
-  //ENVIAR LA PRIMER PARTE DEL PROSPECTO
-  const postProspecto = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+    if (!formData.departamentoId || !formData.municipioId) {
+      toast.info("Selecciona un departamento y municipio");
+      return;
+    }
+
     try {
+      setIsSubmitting(true); // Evita múltiples envíos
+
       const response = await axios.post(`${API_URL}/prospecto`, {
         nombreCompleto: formData.nombreCompleto,
         empresaTienda: formData.empresaTienda,
-        telefono: formData.telefono,
-        correo: formData.correoElectronico,
-        usuarioId: vendedor?.sub,
+        direccion: formData.direccion,
+        departamentoId: formData.departamentoId, // Enviar el ID del departamento
+        municipioId: formData.municipioId, // Enviar el ID del municipio
+        usuarioId: vendedor?.sub, // Asegúrate de que vendedor?.sub esté definido
       });
+
       if (response.status === 201) {
         toast.info("Registro de prospecto iniciado");
-        setProspectBoolean(true);
-        setSubmitSuccess(true);
-        // window.location.reload();
+        window.location.reload();
       }
     } catch (error) {
+      console.error("Error al enviar el formulario:", error);
       setSubmitError(
         "Hubo un error al enviar el formulario. Por favor, intente de nuevo."
       );
@@ -310,6 +416,88 @@ export default function ProspectoFormulario() {
     }
   };
 
+  interface Departamento {
+    nombre: string;
+    id: number;
+  }
+
+  interface Municipio {
+    nombre: string;
+    id: number;
+  }
+
+  //-----------------LOGICA PARA SELECCIONAR UN DEPARTAMENTO Y SUS MUNICIPIOS-----------------------------
+  const [departamentos2, setDepartamentos] = useState<Departamento[]>([]);
+  // const [selectedDepartamento, setSelectedDepartamento] = useState<number>();
+  const [municipios, setMunicipios] = useState<Municipio[]>([]);
+
+  // Cargar departamentos al montar el componente
+  useEffect(() => {
+    const fetchDepartamentos = async () => {
+      try {
+        const response = await axios.get(
+          `${API_URL}/customer-location/get-departamentos`
+        ); // Ajusta la URL según tu API
+        setDepartamentos(response.data);
+      } catch (error) {
+        console.error("Error fetching departamentos", error);
+      }
+    };
+
+    fetchDepartamentos();
+  }, []);
+
+  // Lógica para seleccionar un departamento y sus municipios
+  const handleSelectDepartamento = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    const id = Number(event.target.value);
+    setFormData({
+      ...formData,
+      departamentoId: id,
+      municipioId: 0,
+      municipio: "",
+    }); // Resetea municipio al seleccionar un departamento
+    if (id) {
+      const fetchMunicipios = async () => {
+        try {
+          const response = await axios.get(
+            `${API_URL}/customer-location/get-municipios/${id}`
+          );
+          const data = response.data;
+
+          // Verifica que los datos recibidos sean un array antes de actualizarlos
+          if (Array.isArray(data)) {
+            setMunicipios(data);
+          } else {
+            setMunicipios([]); // Si no es un array, inicializa como array vacío
+            console.error("Los datos recibidos no son un array:", data);
+          }
+        } catch (error) {
+          console.error("Error fetching municipios", error);
+        }
+      };
+
+      fetchMunicipios();
+    }
+  };
+
+  const handleSelectMunicipio = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    const id = Number(event.target.value);
+    const selectedMunicipio = municipios.find((m) => m.id === id); // Asegúrate de que la propiedad ID esté presente en tu objeto municipio
+    if (selectedMunicipio) {
+      setFormData({
+        ...formData,
+        municipioId: id,
+        municipio: selectedMunicipio.nombre,
+      });
+    }
+  };
+  const [open, setOpen] = useState(false); // Estado para controlar el diálogo
+  const openDialog = () => setOpen(true); // Abrir el diálogo
+  // const []
   return (
     <div className="">
       {prospectBoolean ? (
@@ -364,20 +552,16 @@ export default function ProspectoFormulario() {
                       )}
                     </div>
                     <div>
-                      <Label htmlFor="correoElectronico">
-                        Correo Electrónico
-                      </Label>
+                      <Label htmlFor="correo">Correo</Label>
                       <Input
-                        id="correoElectronico"
-                        name="correoElectronico"
+                        id="correo"
+                        name="correo"
                         type="email"
-                        value={formData.correoElectronico}
+                        value={formData.correo}
                         onChange={handleInputChange}
                       />
-                      {errors.correoElectronico && (
-                        <p className="text-red-500 text-sm">
-                          {errors.correoElectronico}
-                        </p>
+                      {errors.correo && (
+                        <p className="text-red-500 text-sm">{errors.correo}</p>
                       )}
                     </div>
                     <div className="md:col-span-2">
@@ -390,44 +574,20 @@ export default function ProspectoFormulario() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="municipio">
-                        Ciudad/Pueblo/Municipio*
-                      </Label>
+                      <Label htmlFor="municipio">Municipio/Pueblo*</Label>
                       <Input
                         id="municipio"
                         name="municipio"
                         value={formData.municipio}
-                        onChange={handleInputChange}
                       />
-                      {errors.municipio && (
-                        <p className="text-red-500 text-sm">
-                          {errors.municipio}
-                        </p>
-                      )}
                     </div>
                     <div>
-                      <Label htmlFor="departamento">Departamento/Estado*</Label>
-                      <Select
-                        onValueChange={(value) =>
-                          handleSelectChange("departamento", value)
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccione un departamento" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {departamentos.map((dep) => (
-                            <SelectItem key={dep} value={dep}>
-                              {dep}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {errors.departamento && (
-                        <p className="text-red-500 text-sm">
-                          {errors.departamento}
-                        </p>
-                      )}
+                      <Label htmlFor="departamento">Departamento*</Label>
+                      <Input
+                        id="departamento"
+                        name="municipio"
+                        value={formData.departamento}
+                      />
                     </div>
                   </div>
                 </div>
@@ -480,19 +640,23 @@ export default function ProspectoFormulario() {
                       "Calzado",
                       "Ropa Deportiva",
                       "Ropa Formal",
+                      "Ropa de Trabajo",
+                      "Ropa de Marca",
                     ].map((categoria) => (
                       <div
                         key={categoria}
                         className="flex items-center space-x-2"
                       >
-                        <Checkbox
+                        <input
+                          type="checkbox"
                           id={categoria}
                           checked={formData.categoriasInteres.includes(
                             categoria
                           )}
-                          onCheckedChange={(checked) =>
-                            handleCheckboxChange(categoria, checked as boolean)
+                          onChange={(e) =>
+                            handleCheckboxChange(categoria, e.target.checked)
                           }
+                          className="form-checkbox h-5 w-5 text-indigo-600 transition duration-150 ease-in-out"
                         />
                         <Label htmlFor={categoria}>{categoria}</Label>
                       </div>
@@ -580,14 +744,12 @@ export default function ProspectoFormulario() {
 
                 {/* Comentarios o Necesidades Específicas */}
                 <div className="space-y-4">
-                  <h2 className="text-xl font-semibold">
-                    Comentarios o Necesidades Específicas
-                  </h2>
+                  <h2 className="text-xl font-semibold">Comentarios o Notas</h2>
                   <Textarea
                     name="comentarios"
                     value={formData.comentarios}
                     onChange={handleInputChange}
-                    placeholder="Ingrese cualquier comentario adicional o requisitos especiales"
+                    placeholder="Ingrese cualquier comentario adicional, nota o requisitos especiales"
                   />
                 </div>
 
@@ -597,31 +759,30 @@ export default function ProspectoFormulario() {
                   </Alert>
                 )}
 
-                {/* {submitSuccess && (
-                  <Alert>
-                    <AlertDescription>
-                      El prospecto ha sido registrado exitosamente.
-                    </AlertDescription>
-                  </Alert>
-                )} */}
+                <div className="flex gap-2">
+                  <Button type="button" onClick={handleGetLocation}>
+                    Obtener ubicación actual
+                  </Button>
 
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? "Enviando..." : "Registrar Prospecto"}
-                </Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? "Enviando..." : "Finalizar Prospecto"}
+                  </Button>
+                </div>
+
+                {/* Mostrar las coordenadas obtenidas */}
               </form>
             </CardContent>
           </Card>
         </div>
       ) : (
         <div>
-          {/* Muestra el formulario para registrar un nuevo prospecto aquí */}
           <Card className="w-full max-w-md mx-auto">
             <CardHeader>
               <CardTitle className="text-2xl font-bold text-center">
                 Nuevo Registro de Prospecto
               </CardTitle>
             </CardHeader>
-            <form onSubmit={postProspecto}>
+            <form onSubmit={(e) => e.preventDefault()}>
               <CardContent className="space-y-4">
                 <div>
                   <Label htmlFor="nombreCompleto">Nombre Completo*</Label>
@@ -649,40 +810,112 @@ export default function ProspectoFormulario() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="telefono">Teléfono*</Label>
+                  <Label htmlFor="direccion">Dirección*</Label>
                   <Input
-                    id="telefono"
-                    name="telefono"
-                    value={formData.telefono}
+                    id="direccion"
+                    name="direccion"
+                    value={formData.direccion}
                     onChange={handleInputChange}
                   />
-                  {errors.telefono && (
+                  {errors.direccion && (
                     <p className="text-red-500 text-sm">{errors.telefono}</p>
                   )}
                 </div>
+
                 <div>
-                  <Label htmlFor="correoElectronico">Correo Electrónico</Label>
-                  <Input
-                    id="correoElectronico"
-                    name="correoElectronico"
-                    type="email"
-                    value={formData.correoElectronico}
-                    onChange={handleInputChange}
-                  />
-                  {errors.correoElectronico && (
-                    <p className="text-red-500 text-sm">
-                      {errors.correoElectronico}
-                    </p>
-                  )}
+                  <Label htmlFor="departamento">Departamento*</Label>
+                  <Select
+                    onValueChange={(value) =>
+                      handleSelectDepartamento({
+                        target: { value },
+                      } as React.ChangeEvent<HTMLSelectElement>)
+                    }
+                    value={String(formData.departamentoId)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccione un departamento" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Departamentos</SelectLabel>
+                        {departamentos2.map((departamento) => (
+                          <SelectItem
+                            key={departamento.id}
+                            value={String(departamento.id)}
+                          >
+                            {departamento.nombre}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="municipio">Municipio*</Label>
+                  <Select
+                    onValueChange={(value) =>
+                      handleSelectMunicipio({
+                        target: { value },
+                      } as React.ChangeEvent<HTMLSelectElement>)
+                    }
+                    value={String(formData.municipioId)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccione un municipio" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Municipios</SelectLabel>
+                        {Array.isArray(municipios) &&
+                          municipios.map((municipio) => (
+                            <SelectItem
+                              key={municipio.id}
+                              value={String(municipio.id)}
+                            >
+                              {municipio.nombre}
+                            </SelectItem>
+                          ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
                 </div>
               </CardContent>
               <CardFooter>
-                <Button type="submit" className="w-full">
+                <Button type="button" className="w-full" onClick={openDialog}>
                   Iniciar Prospecto
                 </Button>
               </CardFooter>
             </form>
           </Card>
+
+          {/* Dialogo de confirmación */}
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle className="text-center">
+                  Confirmar Registro de Prospecto
+                </DialogTitle>
+              </DialogHeader>
+              <p className="text-center">
+                ¿Está seguro de que desea iniciar este prospecto?
+              </p>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={async () => {
+                    await postProspecto();
+                    setOpen(false);
+                  }}
+                  disabled={isSubmitting}
+                >
+                  Confirmar
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       )}
     </div>

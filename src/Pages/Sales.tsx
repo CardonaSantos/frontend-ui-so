@@ -30,6 +30,9 @@ function Sales() {
     <div className=" bg-gray-100 dark:bg-gray-900">
       <div className="container mx-auto py-10">
         <div className="">
+          <div className="">
+            <h2>Filtro Proximamente...</h2>
+          </div>
           <TableSale sales={sales} />
         </div>
       </div>

@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/table";
 import axios from "axios";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { Link } from "react-router-dom";
 const API_URL = import.meta.env.VITE_API_URL;
 
 // Tipos de datos de prueba
@@ -69,61 +71,6 @@ const StockDeliveryRecords: React.FC = () => {
     getDeliveryRecords();
   }, []);
 
-  // Datos de prueba
-  // const deliveries: Delivery[] = [
-  //   {
-  //     id: 12,
-  //     proveedorId: 6,
-  //     timestamp: "2024-09-25T05:12:57.293Z",
-  //     creadoEn: "2024-09-25T05:12:57.293Z",
-  //     actualizadoEn: "2024-09-25T05:12:57.293Z",
-  //     total_pagado: 5960,
-  //     productos: [
-  //       {
-  //         id: 21,
-  //         productoId: 36,
-  //         entregaStockId: 12,
-  //         cantidad: 20,
-  //         costoUnitario: 120,
-  //         producto: {
-  //           id: 36,
-  //           nombre: "Tenis I-Runn",
-  //           descripcion: "Tenis para montaña deportivo Rojo",
-  //           precio: 240,
-  //           codigoProducto: "L2K5NN",
-  //           creadoEn: "2024-09-20T15:33:08.696Z",
-  //           actualizadoEn: "2024-09-20T15:33:08.696Z",
-  //         },
-  //       },
-  //       {
-  //         id: 22,
-  //         productoId: 40,
-  //         entregaStockId: 12,
-  //         cantidad: 20,
-  //         costoUnitario: 55,
-  //         producto: {
-  //           id: 40,
-  //           nombre: "CAMISA XL",
-  //           descripcion: "Descripcion del producto",
-  //           precio: 90,
-  //           codigoProducto: "234FJ",
-  //           creadoEn: "2024-09-21T16:05:48.422Z",
-  //           actualizadoEn: "2024-09-21T16:05:48.422Z",
-  //         },
-  //       },
-  //     ],
-  //     proveedor: {
-  //       id: 6,
-  //       nombre: "Mi proveedor N°4",
-  //       correo: "provedor4@gmail.com",
-  //       telefono: "502 3567, 7642, 502 6543 8755",
-  //       direccion: "Huehuetenango, Zona 2 Cantón Independecia",
-  //       creadoEn: "2024-09-25T03:31:01.055Z",
-  //       actualizadoEn: "2024-09-25T03:31:01.055Z",
-  //     },
-  //   },
-  // ];
-
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">
@@ -144,6 +91,7 @@ const DeliveryCard: React.FC<{ delivery: Delivery }> = ({ delivery }) => {
       <CardHeader>
         <CardTitle className="text-lg font-semibold flex justify-between items-center">
           <span>Entrega #{delivery.id}</span>
+
           <Button
             variant="outline"
             size="default"
@@ -153,6 +101,11 @@ const DeliveryCard: React.FC<{ delivery: Delivery }> = ({ delivery }) => {
           </Button>
         </CardTitle>
       </CardHeader>
+      <div className="ml-5 mb-2">
+        <Link to={"/conseguir-comprobante-entrega"}>
+          <Badge>Conseguir comprobante</Badge>
+        </Link>
+      </div>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>

@@ -1,8 +1,6 @@
-"use client";
-
 import { useState, useEffect } from "react";
 // import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import { Clock, MapPin, User, Calendar } from "lucide-react";
+import { Clock, User } from "lucide-react";
 // import L from "leaflet";
 
 // Asegúrate de importar los estilos de Leaflet
@@ -22,115 +20,67 @@ import { useSocket } from "@/Context/SocketProvider ";
 import MyLeafletMap from "../components/Map/Map";
 
 enum Rol {
-  ADMIN,
-  VENDEDOR,
+  ADMIN = "ADMIN",
+  VENDEDOR = "VENDEDOR",
 }
+
+enum Estado {
+  EN_PROSPECTO = "EN_PROSPECTO",
+  FINALIZADO = "FINALIZADO",
+  CANCELADO = "CANCELADO",
+}
+
+interface Asistencia {
+  entrada: string; // fecha de entrada
+  salida: string | null; // puede ser null si aún no ha salido
+}
+
+interface Prospecto {
+  estado: Estado;
+  inicio: string;
+  nombreCompleto: string;
+  empresaTienda: string;
+}
+
 interface Usuario {
   nombre: string;
   id: number;
   rol: Rol;
+  prospecto: Prospecto | null; // Puede ser null
+  asistencia: Asistencia | null; // Puede ser null
 }
 
-interface locationReceived {
+interface LocationReceived {
   latitud: number;
   longitud: number;
   usuarioId: number;
   usuario: Usuario;
+  timestamp: string; // Timestamp de la ubicación
 }
+
 // Datos de ejemplo (en una aplicación real, estos vendrían de una API)
-const employeesData = [
-  {
-    id: 1,
-    name: "Alberto Jesús",
-    location: { lat: 15.6646, lng: -91.7121 },
-    status: "active",
-    checkIn: "08:30",
-    checkOut: "",
-    currentAppointment: {
-      client: "Empresa XYZ",
-      startTime: "09:30",
-      endTime: "",
-    },
-  },
-  {
-    id: 2,
-    name: "Mari Mileidy",
-    location: { lat: 15.6684, lng: -91.7104 },
-    status: "inactive",
-    checkIn: "07:45",
-    checkOut: "16:30",
-    currentAppointment: null,
-  },
-  {
-    id: 3,
-    name: "Elizabeth R.",
-    location: { lat: 15.6653, lng: -91.70697 },
-    status: "active",
-    checkIn: "09:00",
-    checkOut: "",
-    currentAppointment: {
-      client: "Tienda Local",
-      startTime: "10:30",
-      endTime: "",
-    },
-  },
-  {
-    id: 4,
-    name: "Fernanda M.",
-    location: { lat: 15.6611, lng: -91.7052 },
-    status: "inactive",
-    checkIn: "08:15",
-    checkOut: "17:00",
-    currentAppointment: null,
-  },
-  {
-    id: 5,
-    name: "Carlos Ed.",
-    location: { lat: 15.6532, lng: -91.7697 },
-    status: "active",
-    checkIn: "06:50",
-    checkOut: "",
-    currentAppointment: {
-      client: "Restaurante La Paz",
-      startTime: "09:00",
-      endTime: "",
-    },
-  },
-  {
-    id: 6,
-    name: "Faustina",
-    location: { lat: 15.6549, lng: -91.7727 },
-    status: "inactive",
-    checkIn: "07:30",
-    checkOut: "15:45",
-    currentAppointment: null,
-  },
-];
 
 export default function Employees() {
   const socket = useSocket();
 
-  const [employees, setEmployees] = useState(employeesData);
-  const [locations, setLocations] = useState<locationReceived[]>([]);
+  // const [employees, setEmployees] = useState(employeesData);
+  const [locations, setLocations] = useState<LocationReceived[]>([]);
 
   useEffect(() => {
     if (socket) {
-      const locationListener = (locationData: locationReceived) => {
+      const locationListener = (locationData: LocationReceived) => {
         console.log("Nueva ubicación recibida:", locationData);
 
         setLocations((prevLocations) => {
-          // Buscar si ya existe una ubicación para este usuario
           const existingLocationIndex = prevLocations.findIndex(
             (loc) => loc.usuarioId === locationData.usuarioId
           );
 
           if (existingLocationIndex !== -1) {
-            // Si existe, actualizamos la ubicación
             const updatedLocations = [...prevLocations];
             updatedLocations[existingLocationIndex] = locationData;
             return updatedLocations;
           } else {
-            // Si no existe, añadimos una nueva ubicación
             return [...prevLocations, locationData];
           }
         });
@@ -143,6 +93,8 @@ export default function Employees() {
       };
     }
   }, [socket]);
+
+  console.log("Los empleados en vista empleados son: ", locations);
 
   return (
     <div className="container mx-auto p-4">
@@ -171,7 +123,7 @@ export default function Employees() {
             <TableHead>Estado</TableHead>
             <TableHead>Entrada</TableHead>
             <TableHead>Salida</TableHead>
-            <TableHead>Cita Actual</TableHead>
+            <TableHead>Ahora</TableHead>
             {/* <TableHead>Acciones</TableHead> */}
           </TableRow>
         </TableHeader>
@@ -192,13 +144,25 @@ export default function Employees() {
               </TableCell>
               <TableCell>
                 <Clock className="w-4 h-4 inline mr-1" />
-                {loc.usuario.nombre}
+                {loc.usuario.asistencia?.entrada
+                  ? new Date(loc.usuario.asistencia.entrada).toLocaleString()
+                  : "Entrada no registrada"}
               </TableCell>
               <TableCell>
                 <Clock className="w-4 h-4 inline mr-1" />
-                {/* {employee.checkOut || "En progreso"} */}
-                {loc.usuario.nombre || "En progreso"}
+                {loc.usuario.asistencia?.salida
+                  ? new Date(loc.usuario.asistencia.salida).toLocaleString()
+                  : "En progreso"}
               </TableCell>
+
+              <TableCell>
+                <User className="w-4 h-4 inline mr-1" />
+                {loc.usuario.prospecto?.nombreCompleto &&
+                loc.usuario.prospecto?.empresaTienda
+                  ? `${loc.usuario.prospecto.nombreCompleto} - ${loc.usuario.prospecto.empresaTienda}`
+                  : "Sin actividad"}
+              </TableCell>
+
               {/* <TableCell>
                 {employee.currentAppointment ? (
                   <div>

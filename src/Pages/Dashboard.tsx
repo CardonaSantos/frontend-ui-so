@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { DollarSign, MapPin, User2Icon } from "lucide-react";
+import { DollarSign, User2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -12,8 +12,6 @@ import {
 } from "@/components/ui/table";
 
 import MyLeafletMap from "../components/Map/Map";
-import { Badge } from "@/components/ui/badge";
-import { Link } from "react-router-dom";
 
 import { useSocket } from "../Context/SocketProvider ";
 
@@ -30,33 +28,42 @@ interface ConnectedUsersData {
 }
 
 enum Rol {
-  ADMIN,
-  VENDEDOR,
+  ADMIN = "ADMIN",
+  VENDEDOR = "VENDEDOR",
 }
-interface Usuario {
-  nombre: string;
-  id: number;
-  rol: Rol;
-  prospectos: Prospectos[];
-}
+
 enum Estado {
   EN_PROSPECTO = "EN_PROSPECTO",
   FINALIZADO = "FINALIZADO",
   CANCELADO = "CANCELADO",
 }
 
-interface Prospectos {
+interface Asistencia {
+  entrada: string; // fecha de entrada
+  salida: string | null; // puede ser null si aún no ha salido
+}
+
+interface Prospecto {
   estado: Estado;
   inicio: string;
   nombreCompleto: string;
   empresaTienda: string;
 }
 
-interface locationReceived {
+interface Usuario {
+  nombre: string;
+  id: number;
+  rol: Rol;
+  prospecto: Prospecto | null; // Puede ser null
+  asistencia: Asistencia | null; // Puede ser null
+}
+
+interface LocationReceived {
   latitud: number;
   longitud: number;
   usuarioId: number;
   usuario: Usuario;
+  timestamp: string; // Timestamp de la ubicación
 }
 
 export default function Dashboard() {
@@ -85,26 +92,23 @@ export default function Dashboard() {
 
   console.log("--------------------------------------------------");
 
-  const [locations, setLocations] = useState<locationReceived[]>([]);
+  const [locations, setLocations] = useState<LocationReceived[]>([]);
 
   useEffect(() => {
     if (socket) {
-      const locationListener = (locationData: locationReceived) => {
+      const locationListener = (locationData: LocationReceived) => {
         console.log("Nueva ubicación recibida:", locationData);
 
         setLocations((prevLocations) => {
-          // Buscar si ya existe una ubicación para este usuario
           const existingLocationIndex = prevLocations.findIndex(
             (loc) => loc.usuarioId === locationData.usuarioId
           );
 
           if (existingLocationIndex !== -1) {
-            // Si existe, actualizamos la ubicación
             const updatedLocations = [...prevLocations];
             updatedLocations[existingLocationIndex] = locationData;
             return updatedLocations;
           } else {
-            // Si no existe, añadimos una nueva ubicación
             return [...prevLocations, locationData];
           }
         });

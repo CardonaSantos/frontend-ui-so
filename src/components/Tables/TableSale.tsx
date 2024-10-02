@@ -11,6 +11,12 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "../ui/collapsible";
+import { ChevronDown } from "lucide-react";
 interface SalesTypeProp {
   sales: SalesType | null;
 }
@@ -40,7 +46,8 @@ const TableSale: React.FC<SalesTypeProp> = ({ sales }) => {
                 <CardTitle className="flex justify-between items-center">
                   <span>Venta #{venta.id}</span>
                   <a
-                    href={`/comprobante-venta/${venta.id}`}
+                    // href={`/comprobante-venta/${venta.id}`}
+                    href={`/comprobante-venta/`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -60,7 +67,7 @@ const TableSale: React.FC<SalesTypeProp> = ({ sales }) => {
                     <p>{venta.cliente.correo}</p>
                     <p>{venta.cliente.telefono}</p>
                   </div>
-                  <div>
+                  {/* <div>
                     <h3 className="font-semibold">Productos</h3>
                     <Table>
                       <TableHeader>
@@ -84,7 +91,48 @@ const TableSale: React.FC<SalesTypeProp> = ({ sales }) => {
                         ))}
                       </TableBody>
                     </Table>
-                  </div>
+                  </div> */}
+
+                  {/* Collapsible para los productos */}
+                  <Collapsible>
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-semibold">Productos</h3>
+                      <CollapsibleTrigger className="bg-transparent" asChild>
+                        <button className="text-gray-500 hover:text-gray-700">
+                          <ChevronDown className="h-5 w-5" />
+                          <span className="sr-only">
+                            Mostrar/ocultar productos
+                          </span>
+                        </button>
+                      </CollapsibleTrigger>
+                    </div>
+                    <CollapsibleContent>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Producto</TableHead>
+                            <TableHead>Cantidad</TableHead>
+                            <TableHead>Precio</TableHead>
+                            <TableHead>Total</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {venta.productos.map((producto, index) => (
+                            <TableRow key={index}>
+                              <TableCell>{producto.producto.nombre}</TableCell>
+                              <TableCell>{producto.cantidad}</TableCell>
+                              <TableCell>
+                                Q{producto.precio.toFixed(2)}
+                              </TableCell>
+                              <TableCell>
+                                Q{producto.cantidad * producto.precio}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </CollapsibleContent>
+                  </Collapsible>
                   <div className="flex justify-between items-center font-semibold">
                     <span>Total de la venta:</span>
                     <span>Q{venta.monto.toFixed(2)}</span>
@@ -111,11 +159,6 @@ const TableSale: React.FC<SalesTypeProp> = ({ sales }) => {
                     <h3 className="font-semibold">Método de pago</h3>
                     <p>{venta.metodoPago}</p>
                   </div>
-
-                  {/* <div>
-                    <h3 className="font-semibold">Notas</h3>
-                    <p>{venta.id}</p>
-                  </div> */}
                 </div>
               </CardContent>
             </Card>

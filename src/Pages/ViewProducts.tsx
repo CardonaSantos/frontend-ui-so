@@ -17,20 +17,44 @@ import { Link } from "react-router-dom";
 import { Product } from "../Utils/Types/Product";
 import axios from "axios";
 import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const API_URL = import.meta.env.VITE_API_URL;
 // Mock product data
+type Producto = {
+  id: number;
+  productoId: number;
+  categoriaId: number;
+  creadoEn: string;
+  actualizadoEn: string;
+};
+
+export type CategoriaFiltrar = {
+  id: number;
+  nombre: string;
+  creadoEn: string;
+  actualizadoEn: string;
+  productos: Producto[];
+};
 
 export default function ViewProducts() {
+  // const [selectedCategory, setSelectedCategory] = useState("Todas");
+  const [categoria, setCategoria] = useState<CategoriaFiltrar[]>([]);
   const [products, setProducts] = useState<Product[]>([]); // Adjusted type
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
-    category: "",
+    category: "Todas",
     size: "",
     color: "",
-    priceRange: [0, 200],
+    priceRange: [0, 300],
   });
 
   // Fetch products from API
@@ -55,8 +79,31 @@ export default function ViewProducts() {
     (product) =>
       product.nombre.toLowerCase().includes(searchTerm.toLowerCase()) &&
       product.precio >= filters.priceRange[0] &&
-      product.precio <= filters.priceRange[1]
+      product.precio <= filters.priceRange[1] &&
+      (filters.category === "Todas" ||
+        product.categorias.some(
+          (cat) => cat.categoria.nombre === filters.category
+        ))
   );
+
+  // Obtener clientes
+  useEffect(() => {
+    const getCategories = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/categories`);
+        if (response.status === 200) {
+          setCategoria(response.data);
+        }
+      } catch (error) {
+        console.error(error);
+        toast.error("No se encontraron clientes");
+      }
+    };
+
+    getCategories();
+  }, []);
+
+  console.log(filters);
 
   return (
     <div className="container mx-auto p-4">
@@ -89,40 +136,44 @@ export default function ViewProducts() {
           <h2 className="text-lg font-semibold mb-4">Filtros</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
-              <Label>Categoría</Label>
-              <select
-                className="w-full mt-1 p-2 border rounded"
-                value={filters.category}
-                onChange={(e) =>
-                  setFilters({ ...filters, category: e.target.value })
-                }
-              >
-                <option value="">Todas las Categorías</option>
-                <option value="Camisetas">Camisetas</option>
-                <option value="Suéteres">Suéteres</option>
-                <option value="Chaquetas">Chaquetas</option>
-                <option value="Shorts">Shorts</option>
-                <option value="Vestidos">Vestidos</option>
-                <option value="Pantalones">Pantalones</option>
-                <option value="Accesorios">Accesorios</option>
-              </select>
+              <CardContent>
+                <Select
+                  value={filters.category}
+                  onValueChange={(value) =>
+                    setFilters({ ...filters, category: value })
+                  }
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Categoría" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Todas">Todas</SelectItem>
+                    {categoria &&
+                      categoria.map((category) => (
+                        <SelectItem value={category.nombre}>
+                          {category.nombre}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </CardContent>
             </div>
-            <div>
-              <Label>Rango de Precio</Label>
-              <Slider
-                min={0}
-                max={200}
-                step={10}
-                value={filters.priceRange}
-                onValueChange={(value) =>
-                  setFilters({ ...filters, priceRange: value })
-                }
-                className="mt-2"
-              />
-              <div className="flex justify-between mt-2">
-                <span>${filters.priceRange[0]}</span>
-                <span>${filters.priceRange[1]}</span>
-              </div>
+          </div>
+          <div>
+            <Label>Rango de Precio</Label>
+            <Slider
+              min={0}
+              max={300}
+              step={10}
+              value={filters.priceRange}
+              onValueChange={(value) =>
+                setFilters({ ...filters, priceRange: value })
+              }
+              className="mt-2"
+            />
+            <div className="flex justify-between mt-2">
+              <span>Q{filters.priceRange[0]}</span>
+              <span>Q{filters.priceRange[1]}</span>
             </div>
           </div>
         </div>

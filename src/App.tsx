@@ -17,7 +17,6 @@ import Customers from "./Pages/Customers";
 import Users from "./Pages/Users";
 import Sales from "./Pages/Sales";
 import Employees from "./Pages/Employees";
-import DatesView from "./Pages/DatesView";
 import SellerHistory from "./Pages/SellerHistory";
 import CreateProduct from "./Pages/CreateProduct";
 import StockPage from "./Pages/StockPage";
@@ -30,9 +29,13 @@ import CrearProveedor from "./Pages/CrearProveedor";
 import StockDeliveryRecords from "./Pages/StockDeliveryRecords";
 import CreateClient from "./Pages/CreateClient";
 import Prospecto from "./Pages/Prospecto";
-import ProspectoForm from "./Pages/ProspectoForm";
 import ProspectoFormulario from "./Pages/ProspectoFormulario";
 import ProspectoHistorial from "./Pages/ProspectoHistorial";
+import ProspectoUbicacion from "./Pages/MapProspect/ProspectoUbicacion";
+import PdfPage from "./components/PDF/PdfPage";
+import DeliveryPdfPage from "./components/PDF/DeliveryPdfPage";
+import EditCustomer from "./Pages/Tools/EditCustomer";
+import { ProtectedRoute } from "./components/Auth/ProtectedRoute";
 
 function App() {
   return (
@@ -51,41 +54,190 @@ function App() {
 
           {/* Rutas protegidas con Layout */}
           <Route element={<Layout />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/clientes" element={<Customers />} />
-            <Route path="/usuarios" element={<Users />} />
-            <Route path="/ventas" element={<Sales />} />
-            <Route path="/empleados" element={<Employees />} />
-            <Route path="/historial-citas" element={<DatesView />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/clientes"
+              element={
+                <ProtectedRoute>
+                  <Customers />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/usuarios"
+              element={
+                <ProtectedRoute>
+                  <Users />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/ventas"
+              element={
+                <ProtectedRoute>
+                  <Sales />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/comprobante-venta"
+              element={
+                <ProtectedRoute>
+                  <PdfPage />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/empleados"
+              element={
+                <ProtectedRoute>
+                  <Employees />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/historial-citas"
+              element={
+                <ProtectedRoute>
+                  <ProspectoHistorial />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/historial-empleados-check"
-              element={<SellerHistory />}
+              element={
+                <ProtectedRoute>
+                  <SellerHistory />
+                </ProtectedRoute>
+              }
             />
-            <Route path="/crear-productos" element={<CreateProduct />} />
-            <Route path="/asignar-stock" element={<StockPage />} />
-            <Route path="/ver-productos" element={<ViewProducts />} />
-            <Route path="/hacer-ventas" element={<MakeSale />} />
-            <Route path="/historial-ventas" element={<HistorialVentas />} />
+            <Route
+              path="/crear-productos"
+              element={
+                <ProtectedRoute>
+                  <CreateProduct />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/asignar-stock"
+              element={
+                <ProtectedRoute>
+                  <StockPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/ver-productos"
+              element={
+                <ProtectedRoute>
+                  <ViewProducts />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/hacer-ventas"
+              element={
+                <ProtectedRoute>
+                  <MakeSale />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/historial-ventas"
+              element={
+                <ProtectedRoute>
+                  <HistorialVentas />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/registrar-entrada-salida"
-              element={<CheckInCheckOut />}
+              element={
+                <ProtectedRoute>
+                  <CheckInCheckOut />
+                </ProtectedRoute>
+              }
             />
-
-            <Route path="/crear-categoria" element={<CrearCategoria />} />
-            <Route path="/crear-proveedor" element={<CrearProveedor />} />
-            <Route path="/crear-cliente" element={<CreateClient />} />
-
+            <Route
+              path="/crear-categoria"
+              element={
+                <ProtectedRoute>
+                  <CrearCategoria />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/crear-proveedor"
+              element={
+                <ProtectedRoute>
+                  <CrearProveedor />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/crear-cliente"
+              element={
+                <ProtectedRoute>
+                  <CreateClient />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/registro-entregas"
-              element={<StockDeliveryRecords />}
+              element={
+                <ProtectedRoute>
+                  <StockDeliveryRecords />
+                </ProtectedRoute>
+              }
             />
-
-            <Route path="/visita" element={<Prospecto />} />
-
-            <Route path="/prospecto" element={<ProspectoFormulario />} />
             <Route
-              path="/prospecto/historial"
-              element={<ProspectoHistorial />}
+              path="/visita"
+              element={
+                <ProtectedRoute>
+                  <Prospecto />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/prospecto"
+              element={
+                <ProtectedRoute>
+                  <ProspectoFormulario />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/prospecto-ubicacion"
+              element={
+                <ProtectedRoute>
+                  <ProspectoUbicacion />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/conseguir-comprobante-entrega"
+              element={
+                <ProtectedRoute>
+                  <DeliveryPdfPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/editar-cliente/:id"
+              element={
+                <ProtectedRoute>
+                  <EditCustomer />
+                </ProtectedRoute>
+              }
             />
           </Route>
         </Routes>
@@ -93,5 +245,18 @@ function App() {
     </>
   );
 }
+
+// ACTUALIZAR LA CREACION DE CLIENTES,
+// Creacion de flujo de visita a cliente,
+// Solucionar el error de prospectos historial mapa,
+// Filtros,
+// Check empleados historial, mejorar y filtros,
+// Mejorar el card de venta, modelar el PDF, poner filtros,
+// gestion de unstable_useViewTransitionState mejorar,
+// clientes mejorar vista, filtros,
+// dashboard, poner totales y otros
+// notificacines,
+//PROVEEDORES MEJORAR
+// flujo de peticion de porcentajes
 
 export default App;

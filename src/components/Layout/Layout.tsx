@@ -55,9 +55,14 @@ import { jwtDecode } from "jwt-decode";
 import { useSocket } from "../../Context/SocketProvider ";
 
 const notifications = [
-  { id: 1, message: "New message received" },
-  { id: 2, message: "Your order has been shipped" },
-  { id: 3, message: "Payment successful" },
+  { id: 1, message: "El usuario x ha registrado su entrada" },
+  { id: 2, message: "El usuario y ha registrado una venta" },
+  { id: 3, message: "El usuario z ha comenzado un prospecto" },
+  {
+    id: 4,
+    message:
+      "El usuario w ha hecho una peticion de descuento para el cliente v",
+  },
 ];
 
 interface LayoutProps {
@@ -129,7 +134,7 @@ export default function Layout({ children }: LayoutProps) {
       // Configurar intervalo para enviar la ubicación cada 30 segundos (30000ms)
       const interval = setInterval(() => {
         sendMyLocation();
-      }, 10000); // Cambia el valor según la frecuencia deseada (milisegundos)
+      }, 12000); // Cambia el valor según la frecuencia deseada (milisegundos)
 
       setLocationInterval(interval);
 
@@ -235,7 +240,7 @@ export default function Layout({ children }: LayoutProps) {
                 className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
               >
                 <MessageSquareMore className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                <span>Historial Citas</span>
+                <span>Historial Prospectos</span>
               </Link>
             </li>
 
@@ -464,7 +469,7 @@ export default function Layout({ children }: LayoutProps) {
                       className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
                     >
                       <MessageSquareMore className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                      <span>Historial Citas</span>
+                      <span>Historial Prospectos</span>
                     </Link>
                   </li>
 
@@ -500,6 +505,16 @@ export default function Layout({ children }: LayoutProps) {
 
                   <li>
                     <Link
+                      to="/crear-cliente"
+                      className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
+                    >
+                      <UserPlus className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+                      <span>Añadir cliente</span>
+                    </Link>
+                  </li>
+
+                  <li>
+                    <Link
                       to="/visita"
                       className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
                     >
@@ -517,7 +532,6 @@ export default function Layout({ children }: LayoutProps) {
                       <span>Prospecto</span>
                     </Link>
                   </li>
-
                   {/* Productos Collapsible Section */}
                   <Collapsible>
                     <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 bg-gray-200 dark:bg-gray-800">
@@ -594,7 +608,7 @@ export default function Layout({ children }: LayoutProps) {
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Notifications</DialogTitle>
+                  <DialogTitle>Notificaciones</DialogTitle>
                 </DialogHeader>
                 <ul className="space-y-2">
                   {notifications.map((notification) => (
