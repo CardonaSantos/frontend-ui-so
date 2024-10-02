@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Coins, DollarSign, User2Icon } from "lucide-react";
+import { Coins, User2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -130,6 +130,7 @@ export default function Dashboard() {
   const [cantidadClientes, setCantidadClientes] = useState(0);
 
   const [loading, setLoading] = useState(true);
+  console.log(loading);
 
   useEffect(() => {
     const fetchData = async () => {
