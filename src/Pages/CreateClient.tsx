@@ -131,7 +131,10 @@ export default function CreateClient() {
         comentarios: formData.comentarios,
       }); // Envía el objeto directamente
       if (response.status === 201) {
-        toast.success("Proveedor creado");
+        toast.success("Cliente creado exitosamente");
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
         setFormData({
           nombre: "",
           correo: "",

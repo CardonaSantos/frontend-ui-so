@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { DollarSign, User2Icon } from "lucide-react";
+import { Coins, DollarSign, User2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -14,6 +14,7 @@ import {
 import MyLeafletMap from "../components/Map/Map";
 
 import { useSocket } from "../Context/SocketProvider ";
+const API_URL = import.meta.env.VITE_API_URL;
 
 interface connectedUser {
   totalConnectedUsers: number;
@@ -122,6 +123,44 @@ export default function Dashboard() {
     }
   }, [socket]);
 
+  //----------------------------------------------------------------------
+  const [montoMes, setMontoMes] = useState(0);
+  const [montoSemana, setMontoSemana] = useState(0);
+  const [montoDia, setMontoDia] = useState(0);
+  const [cantidadClientes, setCantidadClientes] = useState(0);
+
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [mesResponse, semanaResponse, diaResponse, cantidadcustomers] =
+          await Promise.all([
+            fetch(`${API_URL}/analytics/get-total-month`),
+            fetch(`${API_URL}/analytics/get-total-weekly`),
+            fetch(`${API_URL}/analytics/get-total-day`),
+            fetch(`${API_URL}/analytics/get-total-clientes`),
+          ]);
+
+        const montoMesData = await mesResponse.json();
+        const montoSemanaData = await semanaResponse.json();
+        const montoDiaData = await diaResponse.json();
+        const cantidadClientes = await cantidadcustomers.json();
+
+        setMontoMes(montoMesData);
+        setMontoSemana(montoSemanaData);
+        setMontoDia(montoDiaData);
+        setCantidadClientes(cantidadClientes);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       {/* Header */}
@@ -142,23 +181,54 @@ export default function Dashboard() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Ingresos totales
+                Ingresos del Mes
               </CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <Coins className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">Q12,345</div>
+              <div className="text-2xl font-bold">
+                Q
+                {montoMes.toLocaleString("en-US", {
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0,
+                })}
+              </div>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Ventas de la semana
+              </CardTitle>
+              <Coins className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                Q
+                {montoSemana.toLocaleString("en-US", {
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0,
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 Ventas del día
               </CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <Coins className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">Q5,345</div>
+              <div className="text-2xl font-bold">
+                Q
+                {montoDia.toLocaleString("en-US", {
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0,
+                })}
+              </div>
             </CardContent>
           </Card>
           <Card>
@@ -172,7 +242,7 @@ export default function Dashboard() {
               <div className="text-2xl font-bold">
                 {connectedUsers
                   ? connectedUsers.totalConnectedUsers
-                  : "Cargando..."}
+                  : "No eres admin..."}
               </div>
             </CardContent>
           </Card>
@@ -195,7 +265,9 @@ export default function Dashboard() {
               <User2Icon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">15</div>
+              <div className="text-2xl font-bold">
+                {cantidadClientes ? cantidadClientes : "null"}
+              </div>
             </CardContent>
           </Card>
         </div>
