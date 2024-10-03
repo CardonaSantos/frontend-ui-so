@@ -114,7 +114,7 @@ export default function CreateClient() {
 
     console.log("Form submitted:", formData);
     try {
-      const response = await axios.post(`http://localhost:3000/customers/`, {
+      const response = await axios.post(`${API_URL}/customers/`, {
         nombre: formData.nombre,
         correo: formData.correo,
         telefono: formData.telefono,
