@@ -25,8 +25,10 @@ import { ShoppingCartIcon, XIcon } from "lucide-react";
 import { toast } from "sonner";
 import axios from "axios";
 import { CategoriaFiltrar } from "../Utils/Types/CategoyFilter";
+import { jwtDecode } from "jwt-decode";
 // import { Cliente, Descuento } from "../Utils/Types/CustomersWithDiscount";
 const API_URL = import.meta.env.VITE_API_URL;
+
 interface Producto {
   id: number;
   nombre: string;
@@ -81,6 +83,27 @@ interface Descuento {
 }
 
 export default function MakeSale() {
+  interface UserTokenInfo {
+    nombre: string;
+    correo: string;
+    rol: string;
+    sub: number;
+  }
+
+  const [tokenUser, setTokenUser] = useState<UserTokenInfo | null>(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+
+    if (token) {
+      try {
+        const decodedToken = jwtDecode<UserTokenInfo>(token);
+        setTokenUser(decodedToken);
+      } catch (error) {
+        console.error("Error decoding token:", error);
+      }
+    }
+  }, []);
   // Estados
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Todas");
@@ -247,7 +270,7 @@ export default function MakeSale() {
       metodoPago: selectedMetodPago,
       descuento: selectedDiscount?.porcentaje, // Ajusta esto según tu lógica
       clienteId: selectedCustomer?.id, // Supongo que esto vendrá de algún lado, ajusta si es necesario
-      vendedorId: 17, // También ajusta según tu contexto
+      vendedorId: tokenUser?.sub, // También ajusta según tu contexto
       productos: cart.map((item) => ({
         productoId: item.id, // Cambiar 'id' a 'productoId'
         cantidad: item.quantity, // La cantidad de productos
