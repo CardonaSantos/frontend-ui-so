@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "../ui/card";
 import axios from "axios";
+const API_URL = import.meta.env.VITE_API_URL;
 
 import logo from "../../assets/images/logoNova.png";
 
@@ -54,7 +55,7 @@ export default function Login() {
 
   const loginUser = async () => {
     try {
-      const response = await axios.post("http://localhost:3000/auth/login", {
+      const response = await axios.post(`${API_URL}/auth/login`, {
         correo: email,
         contrasena: password,
       });
