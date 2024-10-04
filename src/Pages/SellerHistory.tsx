@@ -66,7 +66,7 @@ export default function SellerHistory() {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">Historial de Entrada y Salida</h1>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto shadow-xl">
         <Table>
           <TableHeader>
             <TableRow>

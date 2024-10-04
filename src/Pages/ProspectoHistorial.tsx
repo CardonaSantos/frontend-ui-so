@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { useState, useEffect, ReactNode } from "react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -10,20 +9,26 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import {
-  Phone,
   Mail,
   MapPin,
-  Building,
   User,
-  AlertCircle,
   Coins,
   ShoppingCart,
   Timer,
   LocateIcon,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import axios from "axios";
 
 import { toast } from "sonner";
+
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { Badge } from "@/components/ui/badge";
 const API_URL = import.meta.env.VITE_API_URL;
 
 // Tipos
@@ -90,6 +95,7 @@ export default function ProspectoHistorial() {
   const [selectedDepartamento, setSelectedDepartamento] = useState<
     number | null
   >(null);
+  const [expandedProspect, setExpandedProspect] = useState<number | null>(null);
 
   const [filtros, setFiltros] = useState({
     direccion: "",
@@ -224,6 +230,27 @@ export default function ProspectoHistorial() {
   console.log("Departamento seleccionado:", selectedDepartamento);
   console.log("Filtros actuales:", filtros);
   console.log("Prospectos filtrados:", prospectosFiltrados);
+
+  //----------------------------------------
+
+  // Función para cambiar el prospecto expandido
+  const toggleProspect = (id: number): void => {
+    setExpandedProspect(expandedProspect === id ? null : id);
+  };
+
+  // Función para renderizar la fila de detalles
+  const renderDetailRow = (
+    icon: ReactNode,
+    label: string,
+    value: string | number | null
+  ) => (
+    <div className="flex items-center space-x-2 py-1">
+      {icon}
+      <span className="font-medium">{label}:</span>
+      <span>{value || "No especificado"}</span>
+    </div>
+  );
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6">Registros de Prospectos</h1>
@@ -303,134 +330,178 @@ export default function ProspectoHistorial() {
       </div>
 
       {/* Lista de Prospectos */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+      <div className="space-y-4 shadow-xl">
         {prospectosFiltrados.map((prospecto) => (
-          <Card
-            key={prospecto.id}
-            className="transition-all duration-300 hover:shadow-lg"
-          >
-            <CardContent className="p-6">
-              <h2 className="text-2xl font-semibold mb-4">
-                {prospecto.nombreCompleto
-                  ? prospecto.nombreCompleto
-                  : "No especificado"}
-              </h2>
-              <div className="space-y-2">
-                <p className="flex items-center">
-                  <Building className="mr-2" />{" "}
-                  {prospecto.empresaTienda
-                    ? prospecto.empresaTienda
-                    : "No especificado"}
-                </p>
-                <p className="flex items-center">
-                  <Phone className="mr-2" /> Telefono:{" "}
-                  {prospecto.telefono ? prospecto.telefono : "No especificado"}
-                </p>
-                <p className="flex items-center">
-                  <Mail className="mr-2" /> Correo:{" "}
-                  {prospecto.correo ? prospecto.correo : "No especificado"}
-                </p>
-                <p className="flex items-center">
-                  <MapPin className="mr-2" /> {prospecto.direccion}
-                </p>
-                <p className="flex items-center">
-                  <MapPin className="mr-2" /> {prospecto.municipio.nombre},{" "}
-                  {prospecto.departamento.nombre}
-                </p>
-                <p className="flex items-center">
-                  <User className="mr-2" /> Tipo de cliente: {""}
-                  {prospecto.tipoCliente
-                    ? prospecto.tipoCliente
-                    : "No especificado"}
-                </p>
-                <p className="flex items-center">
-                  <ShoppingCart className="mr-2" /> Volumen de compra:{" "}
-                  {prospecto.volumenCompra
-                    ? prospecto.volumenCompra
-                    : "No especificado"}
-                </p>
-                <p className="flex items-center">
-                  <Coins className="mr-2" /> Presupuesto:{" "}
-                  {prospecto.presupuestoMensual === "menos5000"
-                    ? "Menos de Q5,000"
-                    : prospecto.presupuestoMensual === "5000-10000"
-                    ? "Q5,000 - Q10,000"
-                    : prospecto.presupuestoMensual === "10001-20000"
-                    ? "Q10,001 - Q20,000"
-                    : prospecto.presupuestoMensual === "mas20000"
-                    ? "Más de Q20,000"
-                    : "Sin presupuesto"}
-                </p>
-                <p className="flex items-center text-justify">
-                  Nota:{" "}
-                  {prospecto.comentarios
-                    ? prospecto.comentarios
-                    : "No hay notas"}
-                </p>
-                <p className="flex items-center">
-                  <AlertCircle className="mr-2" /> Estado: {prospecto.estado}
-                </p>
-                <p className="flex items-center">
-                  <User className="mr-2" /> Vendedor:{" "}
-                  {prospecto.vendedor.nombre}
-                </p>
-                <p className="flex items-center">
-                  <Timer className="mr-2" /> Duración:
-                  {prospecto.fin && prospecto.fin ? (
-                    <span className="ml-2">
-                      {calcularDiferenciaTiempo(
-                        new Date(prospecto.inicio),
-                        new Date(prospecto.fin)
-                      )}
-                    </span>
-                  ) : (
-                    <p className="ml-2">En progreso...</p>
-                  )}
-                </p>
-                {prospecto.ubicacion &&
-                prospecto.ubicacion.latitud &&
-                prospecto.ubicacion.longitud ? (
-                  <div className="flex items-center justify-center">
-                    <LocateIcon className="m-2" />
-                    <a
-                      className="text-center font-bold"
-                      href={`https://www.google.com/maps/?q=${prospecto.ubicacion.latitud},${prospecto.ubicacion.longitud}`} // Esto añade un marcador
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Ver ubicación guardada
-                    </a>
-                  </div>
-                ) : (
-                  <p className="text-center font-bold">
-                    No se guardó la ubicacion
+          <Collapsible key={prospecto.id}>
+            <div
+              className="cursor-pointer border rounded-lg p-4"
+              onClick={() => toggleProspect(prospecto.id)}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {/* Nombre del Prospecto */}
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Nombre
                   </p>
-                )}
+                  <p>{prospecto.nombreCompleto || "No especificado"}</p>
+                </div>
+
+                {/* Empresa */}
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Empresa
+                  </p>
+                  <p>{prospecto.empresaTienda || "No especificado"}</p>
+                </div>
+
+                {/* Teléfono */}
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Teléfono
+                  </p>
+                  <p>{prospecto.telefono || "No especificado"}</p>
+                </div>
+
+                {/* Estado */}
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Estado
+                  </p>
+                  <Badge
+                    variant={
+                      prospecto.estado === "Activo" ? "default" : "secondary"
+                    }
+                  >
+                    {prospecto.estado}
+                  </Badge>
+                </div>
               </div>
-            </CardContent>
-            <CardFooter>
-              {prospecto.fin && prospecto.fin ? (
-                <>
-                  <Button
-                    onClick={() => handleGenerarCliente(prospecto.id)}
-                    className="w-full"
-                  >
-                    Generar Cliente
+
+              {/* Botón para expandir la información */}
+              <div className="mt-2 flex justify-end">
+                <CollapsibleTrigger asChild>
+                  <Button variant="outline" size="default">
+                    {expandedProspect === prospecto.id ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
                   </Button>
-                </>
-              ) : (
-                <>
-                  <Button
-                    onClick={() => handleGenerarCliente(prospecto.id)}
-                    className="w-full"
-                    disabled={true}
-                  >
-                    Esperandon reporte final
-                  </Button>
-                </>
-              )}
-            </CardFooter>
-          </Card>
+                </CollapsibleTrigger>
+              </div>
+            </div>
+
+            <CollapsibleContent>
+              <div className="p-4 bg-muted rounded-md space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Correo */}
+                  {renderDetailRow(
+                    <Mail className="h-4 w-4" />,
+                    "Correo",
+                    prospecto.correo
+                  )}
+
+                  {/* Dirección */}
+                  {renderDetailRow(
+                    <MapPin className="h-4 w-4" />,
+                    "Dirección",
+                    prospecto.direccion
+                  )}
+
+                  {/* Ubicación */}
+                  {renderDetailRow(
+                    <MapPin className="h-4 w-4" />,
+                    "Ubicación",
+                    `${prospecto.municipio.nombre}, ${prospecto.departamento.nombre}`
+                  )}
+
+                  {/* Tipo de Cliente */}
+                  {renderDetailRow(
+                    <User className="h-4 w-4" />,
+                    "Tipo de cliente",
+                    prospecto.tipoCliente
+                  )}
+
+                  {/* Volumen de Compra */}
+                  {renderDetailRow(
+                    <ShoppingCart className="h-4 w-4" />,
+                    "Volumen de compra",
+                    prospecto.volumenCompra
+                  )}
+
+                  {/* Presupuesto */}
+                  {renderDetailRow(
+                    <Coins className="h-4 w-4" />,
+                    "Presupuesto",
+                    prospecto.presupuestoMensual === "menos5000"
+                      ? "Menos de Q5,000"
+                      : prospecto.presupuestoMensual === "5000-10000"
+                      ? "Q5,000 - Q10,000"
+                      : prospecto.presupuestoMensual === "10001-20000"
+                      ? "Q10,001 - Q20,000"
+                      : prospecto.presupuestoMensual === "mas20000"
+                      ? "Más de Q20,000"
+                      : "Sin presupuesto"
+                  )}
+
+                  {/* Vendedor */}
+                  {renderDetailRow(
+                    <User className="h-4 w-4" />,
+                    "Vendedor",
+                    prospecto.vendedor.nombre
+                  )}
+
+                  {/* Duración */}
+                  {renderDetailRow(
+                    <Timer className="h-4 w-4" />,
+                    "Duración",
+                    prospecto.fin
+                      ? calcularDiferenciaTiempo(
+                          new Date(prospecto.inicio),
+                          new Date(prospecto.fin)
+                        )
+                      : "En progreso..."
+                  )}
+                </div>
+
+                {/* Notas */}
+                <div>
+                  <h3 className="font-semibold mb-2">Notas:</h3>
+                  <p className="text-sm">
+                    {prospecto.comentarios || "No hay notas"}
+                  </p>
+                </div>
+
+                {/* Ubicación guardada */}
+                {prospecto.ubicacion &&
+                  prospecto.ubicacion.latitud &&
+                  prospecto.ubicacion.longitud && (
+                    <div className="flex items-center justify-start space-x-2">
+                      <LocateIcon className="h-4 w-4" />
+                      <a
+                        className="text-primary hover:underline"
+                        href={`https://www.google.com/maps/?q=${prospecto.ubicacion.latitud},${prospecto.ubicacion.longitud}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Ver ubicación guardada
+                      </a>
+                    </div>
+                  )}
+
+                {/* Botón para generar cliente */}
+                <Button
+                  onClick={() => handleGenerarCliente(prospecto.id)}
+                  disabled={!prospecto.fin}
+                  className="w-full"
+                >
+                  {prospecto.fin
+                    ? "Generar Cliente"
+                    : "Esperando reporte final"}
+                </Button>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         ))}
       </div>
     </div>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search, Filter, Edit, Plus, X } from "lucide-react";
+import { Search, Filter, Edit, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -8,7 +8,6 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "../components/ui/badge";
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -244,13 +243,11 @@ export default function ViewProducts() {
           <DialogHeader>
             <DialogTitle>{selectedProduct?.nombre}</DialogTitle>
           </DialogHeader>
-          <DialogClose className="absolute right-4 top-4">
-            <X className="h-4 w-4" />
-          </DialogClose>
+
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="text-gray-700">Código producto</Label>
+                <Label className="">Código producto</Label>
                 <Input
                   value={selectedProduct?.codigoProducto}
                   readOnly
@@ -258,17 +255,17 @@ export default function ViewProducts() {
                 />
               </div>
               <div>
-                <Label className="text-gray-700">Categoría</Label>
+                <Label className="">Categoría</Label>
                 <Input
                   value={selectedProduct?.categorias
                     .map((cat) => cat.categoria.nombre)
                     .join(", ")}
                   readOnly
-                  className="w-full p-2 border rounded bg-white text-gray-700"
+                  className="w-full p-2 border rounded bg-white text-gray-700 "
                 />
               </div>
               <div>
-                <Label className="text-gray-700">Precio</Label>
+                <Label className="">Precio</Label>
                 <Input
                   value={`Q${selectedProduct?.precio.toFixed(2)}`}
                   readOnly
@@ -276,7 +273,7 @@ export default function ViewProducts() {
                 />
               </div>
               <div>
-                <Label className="text-gray-700">Stock actual</Label>
+                <Label className="">Stock actual</Label>
                 <Input
                   value={selectedProduct?.stock?.cantidad || 0}
                   readOnly
@@ -285,7 +282,7 @@ export default function ViewProducts() {
                 />
               </div>
               <div>
-                <Label className="text-gray-700">Descripción</Label>
+                <Label className="">Descripción</Label>
                 <textarea
                   className="w-full p-2 border rounded bg-white text-gray-700"
                   rows={3}

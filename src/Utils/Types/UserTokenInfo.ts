@@ -5,4 +5,5 @@ export type UserToken = {
   sub: number;
   iat: number;
   exp: number;
+  activo: boolean;
 };

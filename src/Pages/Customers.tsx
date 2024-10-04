@@ -308,7 +308,7 @@ export default function ClientesList() {
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Lista de Clientes</h1>
 
-      <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+      <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap shadow-xl p-3">
         <div className="w-full mb-2">
           <Input
             placeholder="Buscar por nombre"
@@ -401,7 +401,7 @@ export default function ClientesList() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredCustomers &&
           filteredCustomers.map((cliente) => (
-            <Card className="w-full max-w-md mx-auto overflow-hidden  hover:shadow-xl">
+            <Card className="w-full max-w-md mx-auto overflow-hidden  hover:shadow-xl shadow-lg">
               <CardHeader className="bg-transparent">
                 <div className="flex justify-between items-center">
                   <CardTitle className="text-sm font-bold truncate">

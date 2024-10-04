@@ -26,17 +26,20 @@ function Sales() {
 
   console.log(sales);
 
-  return (
-    <div className=" bg-gray-100 dark:bg-gray-900">
-      <div className="container mx-auto py-10">
-        <div className="">
-          <div className="">
-            <h2>Filtro Proximamente...</h2>
-          </div>
-          <TableSale sales={sales} />
-        </div>
+  if (!sales || sales.length <= 0) {
+    return (
+      <div>
+        <h2 className="text-xl font-bold text-center">
+          No hay ventas disponibles
+        </h2>
       </div>
-    </div>
+    );
+  }
+
+  return (
+    <>
+      <TableSale sales={sales} />
+    </>
   );
 }
 

@@ -89,6 +89,7 @@ export default function Layout({ children }: LayoutProps) {
     correo: string;
     rol: string;
     sub: number;
+    activo: boolean;
   }
 
   const [tokenUser, setTokenUser] = useState<UserTokenInfo | null>(null);
@@ -132,7 +133,7 @@ export default function Layout({ children }: LayoutProps) {
       // Configurar intervalo para enviar la ubicación cada 30 segundos (30000ms)
       const interval = setInterval(() => {
         sendMyLocation();
-      }, 12000); // Cambia el valor según la frecuencia deseada (milisegundos)
+      }, 60000); // Cambia el valor según la frecuencia deseada (milisegundos)
 
       setLocationInterval(interval);
 
@@ -676,12 +677,7 @@ export default function Layout({ children }: LayoutProps) {
 
         {/* Main content */}
         <main className="flex-1 overflow-y-auto p-4">
-          <div className="mx-auto max-w-4xl">
-            {/* <Outlet /> */}
-            {/*{children}  This will render the nested routes */}
-            {children || <Outlet />}{" "}
-            {/* Renderiza children o el Outlet para las rutas anidadas */}
-          </div>
+          <div className="mx-auto max-w-6xl">{children || <Outlet />}</div>
         </main>
       </div>
     </div>

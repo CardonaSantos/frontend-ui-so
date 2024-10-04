@@ -122,7 +122,6 @@ export default function MakeSale() {
   const [customers, setCustomers] = useState<Cliente[]>([]);
   const [categoria, setCategoria] = useState<CategoriaFiltrar[]>([]);
 
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showCartModal, setShowCartModal] = useState(false);
 
   // Obtener productos
@@ -321,358 +320,303 @@ export default function MakeSale() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <div className="container mx-auto p-4">
-        <header className="flex justify-between items-center mb-2">
-          <h1 className="text-2xl font-bold">Hacer venta</h1>
-        </header>
-
-        <div className=" md:grid-cols-3 gap-8">
-          <div className="md:col-span-2">
-            {/* Filtros de búsqueda y categoría */}
-            <Card className="mb-8">
-              <CardContent>
-                <div className="flex items-center space-x-2 mb-4">
-                  <Input
-                    type="text"
-                    placeholder="Buscar productos por nombre o código"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="flex-grow"
-                  />
-                </div>
-                <Select
-                  value={selectedCategory}
-                  onValueChange={setSelectedCategory}
-                >
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Categoría" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Todas">Todas</SelectItem>
-                    {categoria &&
-                      categoria.map((category) => (
-                        <SelectItem value={category.nombre}>
-                          {category.nombre}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </CardContent>
-            </Card>
-
-            <div className="mb-5">
-              <Button variant="outline" onClick={() => setShowCartModal(true)}>
-                <ShoppingCartIcon className="mr-2" />
-                Ver Carrito ({cart.length})
-              </Button>
-
-              <Dialog open={showCartModal} onOpenChange={setShowCartModal}>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Carrito de Compras</DialogTitle>
-                    <DialogDescription>
-                      Estos son los productos que has añadido al carrito.
-                    </DialogDescription>
-                  </DialogHeader>
-
-                  <ScrollArea className="h-[300px]">
-                    {cart.length === 0 ? (
-                      <p className="text-muted-foreground text-center">
-                        El carrito está vacío
-                      </p>
-                    ) : (
-                      cart.map((item) => (
-                        <div
-                          key={item.id}
-                          className="flex items-center justify-between mb-4"
-                        >
-                          <div className="flex items-center gap-2">
-                            <p className="font-semibold">{item.nombre}</p>
-                            <p>=</p>
-                            <p className="text-sm text-muted-foreground">
-                              Q{item.precio.toFixed(2)}
-                            </p>
-                          </div>
-                          <div className="flex items-center">
-                            <Input
-                              type="number"
-                              min="1"
-                              max={item.stock?.cantidad}
-                              value={item.quantity}
-                              onChange={(e) =>
-                                updateQuantity(
-                                  item.id,
-                                  parseInt(e.target.value)
-                                )
-                              }
-                              className="w-16 mr-2"
-                            />
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => removeFromCart(item.id)}
-                            >
-                              <XIcon />
-                            </Button>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </ScrollArea>
-                  <DialogFooter className="flex gap-10 justify-between items-center">
-                    <div className="space-y-2">
-                      <p className="font-semibold ">
-                        Total: Q{calculateTotal()}
-                      </p>
-                      <p className="font-semibold ">
-                        Total con descuento: Q{calculateTotalConDescuento()}
-                      </p>
-                      <p className="font-semibold">
-                        Descuento:{" "}
-                        {selectedDiscount
-                          ? `${selectedDiscount.porcentaje}%`
-                          : "Descuento no seleccionado"}
-                      </p>
-
-                      <p className="font-semibold ">
-                        Cliente: {selectedCustomer?.nombre}
-                      </p>
-
-                      <p className="font-semibold ">
-                        Metodo de pago: {selectedMetodPago}
-                      </p>
-                    </div>
-                    <div className="flex gap-4">
-                      <Button
-                        variant="outline"
-                        onClick={() => setShowCartModal(false)}
-                      >
-                        Cerrar
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => sendCartData(cart)}
-                        disabled={isSubmitting} // Deshabilitar el botón mientras se envía la venta
-                      >
-                        {isSubmitting ? "Procesando..." : "Hacer venta"}
-                      </Button>
-                    </div>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-
-              {/* Resto de tu código (Selección de cliente, notas, etc.) */}
-            </div>
-            <div className="">
-              {/* Selección de Cliente */}
-              <Card className="mb-8">
-                <CardContent>
-                  <h3 className="text-md font-semibold mb-4 pt-2">
-                    Selección de Cliente
-                  </h3>
-
-                  <Select
-                    value={selectedCustomer?.id?.toString() || ""}
-                    onValueChange={(value) => {
-                      const foundCustomer = customers.find(
-                        (c) => c.id === parseInt(value)
-                      );
-                      setSelectedCustomer(foundCustomer || null); // Set null if no customer is found
-                      setSelectedDiscount(null);
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar cliente" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {customers.map((customer) => (
-                        <SelectItem
-                          key={customer.id}
-                          value={customer.id.toString()}
-                        >
-                          {customer.nombre}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  {selectedCustomer && (
-                    <div className="mt-4">
-                      <h3 className="font-semibold mb-2">
-                        Descuentos disponibles:
-                      </h3>
-                      <Select
-                        value={selectedDiscount?.id?.toString() || ""}
-                        onValueChange={(value) => {
-                          const discount = selectedCustomer.descuentos.find(
-                            (d) => d.id === parseInt(value)
-                          );
-                          setSelectedDiscount(discount || null);
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccionar descuento" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {selectedCustomer &&
-                          selectedCustomer.descuentos.length > 0 ? (
-                            selectedCustomer.descuentos.map((discount) => (
-                              <SelectItem
-                                key={discount.id}
-                                value={discount.id.toString()}
-                              >
-                                {discount.porcentaje}%
-                              </SelectItem>
-                            ))
-                          ) : (
-                            <SelectItem disabled value="0">
-                              No hay descuentos disponibles
-                            </SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-            <div className="mb-8">
-              <Card>
-                <CardContent>
-                  <h3 className="text-md font-semibold mb-4 pt-2">
-                    Metódo de pago
-                  </h3>
-                  {/* SELECT PARA EL METODO DE PAGO */}
-                  <Select
-                    value={selectedMetodPago}
-                    onValueChange={setSelectedMetodPago}
-                  >
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="CONTADO" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="CONTADO">CONTADO</SelectItem>
-                      <SelectItem value="TARJETA">TARJETA</SelectItem>
-                      <SelectItem value="TRANSFERENCIA_BANCO">
-                        TRANSFERENCIA BANCARIA
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="">
-              <Card className="mb-8">
-                <CardContent>
-                  <h3 className="text-md font-semibold mb-4 pt-2">
-                    Solicitar Descuento
-                  </h3>
-                  <div className="flex items-center mb-4">
-                    <input
-                      className="bg-white dark:text-black border rounded-md p-2 w-32 mr-2"
-                      type="number"
-                      placeholder="Porcentaje"
-                      min="0"
-                      max="100"
-                      value={descuento}
-                      onChange={(e) => setDescuento(e.target.value)}
-                    />
-                    <span className="text-lg">%</span>
-                  </div>
-                  <Textarea
-                    placeholder="Notas sobre la solicitud (opcional)"
-                    onChange={(e) => setNota(e.target.value)}
-                    className="mb-4"
-                    value={nota}
-                  />
-                  <Button onClick={requestCustomDiscount} className="mt-2">
-                    Solicitar Descuento Personalizado
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Productos filtrados */}
-            <ScrollArea className="h-[500px]">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredProducts.map((product) => (
-                  <Card key={product.id}>
-                    <CardContent className="p-4">
-                      <h3 className="font-semibold">{product.nombre}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {product.codigoProducto}
-                      </p>
-                      <div className="flex flex-wrap gap-2 my-2">
-                        {product.categorias.map((cat) => (
-                          <Badge key={cat.categoria.id} variant="outline">
-                            {cat.categoria.nombre}
-                          </Badge>
-                        ))}
-                      </div>
-                      <p className="font-semibold mt-2">
-                        Q{product.precio.toFixed(2)}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Stock:{" "}
-                        {product.stock &&
-                        typeof product.stock.cantidad === "number" &&
-                        product.stock.cantidad > 0 ? (
-                          <Badge key={product.id} variant="outline">
-                            {product.stock.cantidad}
-                          </Badge>
-                        ) : (
-                          <Badge key={product.id} variant="destructive">
-                            Fuera de stock
-                          </Badge>
-                        )}
-                      </p>
-                    </CardContent>
-                    <CardFooter>
-                      <Button
-                        onClick={() => addToCart(product)}
-                        disabled={product.stock?.cantidad === 0}
-                      >
-                        Añadir al Carrito
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                ))}
-              </div>
-            </ScrollArea>
-          </div>
-
-          {/* Carrito de compras */}
-        </div>
-      </div>
-
-      {/* Modal de confirmación */}
-      <Dialog open={showConfirmModal} onOpenChange={setShowConfirmModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirmar Venta</DialogTitle>
-            <DialogDescription>
-              ¿Estás seguro de que deseas confirmar esta venta?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowConfirmModal(false)}
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={() => {
-                setShowConfirmModal(false);
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Selección de Cliente y Descuento */}
+      <div className="lg:col-span-2">
+        <Card className="mb-8 shadow-xl">
+          <CardContent>
+            <h3 className="text-md font-semibold mb-4 pt-2">
+              Selección de Cliente
+            </h3>
+            <Select
+              value={selectedCustomer?.id?.toString() || ""}
+              onValueChange={(value) => {
+                const foundCustomer = customers.find(
+                  (c) => c.id === parseInt(value)
+                );
+                setSelectedCustomer(foundCustomer || null);
+                setSelectedDiscount(null);
               }}
             >
-              Confirmar
+              <SelectTrigger>
+                <SelectValue placeholder="Seleccionar cliente" />
+              </SelectTrigger>
+              <SelectContent>
+                {customers.map((customer) => (
+                  <SelectItem key={customer.id} value={customer.id.toString()}>
+                    {customer.nombre}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {selectedCustomer && (
+              <div className="mt-4">
+                <h3 className="font-semibold mb-2">Descuentos disponibles:</h3>
+                <Select
+                  value={selectedDiscount?.id?.toString() || ""}
+                  onValueChange={(value) => {
+                    const discount = selectedCustomer.descuentos.find(
+                      (d) => d.id === parseInt(value)
+                    );
+                    setSelectedDiscount(discount || null);
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar descuento" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {selectedCustomer?.descuentos.length > 0 ? (
+                      selectedCustomer.descuentos.map((discount) => (
+                        <SelectItem
+                          key={discount.id}
+                          value={discount.id.toString()}
+                        >
+                          {discount.porcentaje}%
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem disabled value="0">
+                        No hay descuentos disponibles
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Solicitar Descuento Personalizado */}
+        <Card className="mb-1 shadow-xl">
+          <CardContent>
+            <h3 className="text-md font-semibold mb-4 pt-2">
+              Solicitar Descuento
+            </h3>
+            <div className="flex items-center mb-4">
+              <input
+                className="bg-white dark:text-black border rounded-md p-2 w-32 mr-2"
+                type="number"
+                placeholder="Porcentaje"
+                min="0"
+                max="100"
+                value={descuento}
+                onChange={(e) => setDescuento(e.target.value)}
+              />
+              <span className="text-lg">%</span>
+            </div>
+            <Textarea
+              placeholder="Notas sobre la solicitud (opcional)"
+              onChange={(e) => setNota(e.target.value)}
+              className="mb-4"
+              value={nota}
+            />
+            <Button onClick={requestCustomDiscount} className="mt-2">
+              Solicitar Descuento Personalizado
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Método de Pago y Carrito */}
+      <div className="lg:col-span-1">
+        <Card className="mb-1 shadow-xl">
+          <CardContent>
+            <h3 className="text-md font-semibold mb-4 pt-2">Método de Pago</h3>
+            <Select
+              value={selectedMetodPago}
+              onValueChange={setSelectedMetodPago}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="CONTADO" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="CONTADO">CONTADO</SelectItem>
+                <SelectItem value="TARJETA">TARJETA</SelectItem>
+                <SelectItem value="TRANSFERENCIA_BANCO">
+                  TRANSFERENCIA BANCARIA
+                </SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Button
+              variant="outline"
+              onClick={() => setShowCartModal(true)}
+              className="mt-4"
+            >
+              <ShoppingCartIcon className="mr-2" />
+              Ver Carrito ({cart.length})
+            </Button>
+
+            <Dialog open={showCartModal} onOpenChange={setShowCartModal}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Carrito de Compras</DialogTitle>
+                  <DialogDescription>
+                    Estos son los productos que has añadido al carrito.
+                  </DialogDescription>
+                </DialogHeader>
+                <ScrollArea className="h-[300px]">
+                  {cart.length === 0 ? (
+                    <p className="text-muted-foreground text-center">
+                      El carrito está vacío
+                    </p>
+                  ) : (
+                    cart.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between mb-4"
+                      >
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold">{item.nombre}</p>
+                          <p>=</p>
+                          <p className="text-sm text-muted-foreground">
+                            Q{item.precio.toFixed(2)}
+                          </p>
+                        </div>
+                        <div className="flex items-center">
+                          <Input
+                            type="number"
+                            min="1"
+                            max={item.stock?.cantidad}
+                            value={item.quantity}
+                            onChange={(e) =>
+                              updateQuantity(item.id, parseInt(e.target.value))
+                            }
+                            className="w-16 mr-2"
+                          />
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => removeFromCart(item.id)}
+                          >
+                            <XIcon />
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </ScrollArea>
+                <DialogFooter className="flex justify-between items-center">
+                  <div className="space-y-2">
+                    <p className="font-semibold">Total: Q{calculateTotal()}</p>
+                    <p className="font-semibold">
+                      Total con descuento: Q{calculateTotalConDescuento()}
+                    </p>
+                    <p className="font-semibold">
+                      Descuento:{" "}
+                      {selectedDiscount
+                        ? `${selectedDiscount.porcentaje}%`
+                        : "Descuento no seleccionado"}
+                    </p>
+                    <p className="font-semibold">
+                      Cliente: {selectedCustomer?.nombre}
+                    </p>
+                    <p className="font-semibold">
+                      Método de pago: {selectedMetodPago}
+                    </p>
+                  </div>
+                  <div className="flex gap-2 pb-1">
+                    <Button
+                      variant="outline"
+                      onClick={() => sendCartData(cart)}
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? "Procesando..." : "Confirmar venta"}
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowCartModal(false)}
+                    >
+                      Cerrar
+                    </Button>
+                  </div>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Productos Filtrados */}
+      <div className="lg:col-span-3">
+        <Card className="mb-4 shadow-xl">
+          <CardContent>
+            <div className="pt-5 flex flex-col md:flex-row items-start space-y-4 md:space-y-0 md:space-x-4">
+              {/* Input de búsqueda más largo */}
+              <Input
+                type="text"
+                placeholder="Buscar productos por nombre o código"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="flex-grow md:flex-grow-0 md:w-3/4" // Aumenta el ancho del Input en pantallas más grandes
+              />
+
+              {/* Select con ancho ajustado */}
+              <Select
+                value={selectedCategory}
+                onValueChange={setSelectedCategory}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Categoría" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Todas">Todas</SelectItem>
+                  {categoria?.map((category) => (
+                    <SelectItem key={category.nombre} value={category.nombre}>
+                      {category.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        <ScrollArea className="h-[500px] shadow-xl">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredProducts.map((product) => (
+              <Card key={product.id}>
+                <CardContent className="p-4">
+                  <h3 className="font-semibold">{product.nombre}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {product.codigoProducto}
+                  </p>
+                  <div className="flex flex-wrap gap-2 my-2">
+                    {product.categorias.map((cat) => (
+                      <Badge key={cat.categoria.id} variant="outline">
+                        {cat.categoria.nombre}
+                      </Badge>
+                    ))}
+                  </div>
+                  <p className="font-semibold mt-2">
+                    Q{product.precio.toFixed(2)}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Stock:{" "}
+                    {product.stock &&
+                    product.stock.cantidad &&
+                    product.stock.cantidad > 0 ? (
+                      <Badge variant="outline">{product.stock.cantidad}</Badge>
+                    ) : (
+                      <Badge variant="destructive">Fuera de stock</Badge>
+                    )}
+                  </p>
+                </CardContent>
+                <CardFooter>
+                  <Button
+                    onClick={() => addToCart(product)}
+                    disabled={product.stock?.cantidad === 0}
+                  >
+                    Añadir al Carrito
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        </ScrollArea>
+      </div>
     </div>
   );
 }

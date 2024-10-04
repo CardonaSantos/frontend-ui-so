@@ -237,7 +237,7 @@ export default function CreateClient() {
   };
 
   return (
-    <Card className="w-full max-w-lg mx-auto">
+    <Card className="w-full max-w-lg mx-auto shadow-xl">
       <CardHeader>
         <CardTitle>Crear Nuevo Cliente</CardTitle>
         <CardDescription>

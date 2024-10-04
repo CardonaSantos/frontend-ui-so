@@ -101,7 +101,7 @@ export default function Employees() {
       <h1 className="text-2xl font-bold mb-4">Seguimiento de Empleados</h1>
 
       {/* Active Employees Section */}
-      <Card className="mt-8">
+      <Card className="mt-8 shadow-xl">
         <CardHeader>
           <CardTitle>Empleados Activos</CardTitle>
         </CardHeader>

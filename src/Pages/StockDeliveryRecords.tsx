@@ -87,7 +87,7 @@ const DeliveryCard: React.FC<{ delivery: Delivery }> = ({ delivery }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <Card className="mb-4">
+    <Card className="mb-4 shadow-xl">
       <CardHeader>
         <CardTitle className="text-lg font-semibold flex justify-between items-center">
           <span>Entrega #{delivery.id}</span>

@@ -13,6 +13,17 @@ export default function CrearProveedor() {
     correo: "",
     telefono: "",
     direccion: "",
+    razonSocial: "",
+    rfc: "",
+    nombreContacto: "",
+    telefonoContacto: "",
+    emailContacto: "",
+    pais: "",
+    ciudad: "",
+    codigoPostal: "",
+    notas: "",
+    latitud: 0,
+    longitud: 0,
   });
 
   console.log(proveedor);
@@ -27,24 +38,46 @@ export default function CrearProveedor() {
     try {
       const response = await axios.post(`${API_URL}/provider`, proveedor); // Envía el objeto directamente
       if (response.status === 201) {
-        toast.success("Proveedor creado");
+        toast.success("Proveedor creado exitosamente");
         setProveedor({
           nombre: "",
           correo: "",
           telefono: "",
           direccion: "",
+          razonSocial: "",
+          rfc: "",
+          nombreContacto: "",
+          telefonoContacto: "",
+          emailContacto: "",
+          pais: "",
+          ciudad: "",
+          codigoPostal: "",
+          latitud: 0,
+          longitud: 0,
+          notas: "",
         });
       }
     } catch (error) {
-      toast.error("Error al crear categoría");
+      toast.error("Error al crear el proveedor");
     }
     console.log("Proveedor a crear:", proveedor);
-    // Aquí iría la lógica para enviar los datos al servidor
+  };
+
+  const handleCoordenadasCliente = (value: string) => {
+    const [lat, lng] = value
+      .split(",")
+      .map((coord: string) => parseFloat(coord.trim()));
+
+    setProveedor((prevData) => ({
+      ...prevData,
+      latitud: lat,
+      longitud: lng,
+    }));
   };
 
   return (
     <div className="container mx-auto p-4">
-      <Card className="w-full max-w-2xl mx-auto">
+      <Card className="w-full max-w-2xl mx-auto shadow-xl">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-center">
             Crear Nuevo Proveedor
@@ -92,7 +125,100 @@ export default function CrearProveedor() {
                   name="direccion"
                   value={proveedor.direccion}
                   onChange={handleChange}
-                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="razonSocial">Razón Social</Label>
+                <Input
+                  id="razonSocial"
+                  name="razonSocial"
+                  value={proveedor.razonSocial}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="rfc">RFC</Label>
+                <Input
+                  id="rfc"
+                  name="rfc"
+                  value={proveedor.rfc}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="nombreContacto">Nombre de Contacto</Label>
+                <Input
+                  id="nombreContacto"
+                  name="nombreContacto"
+                  value={proveedor.nombreContacto}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="telefonoContacto">Teléfono de Contacto</Label>
+                <Input
+                  id="telefonoContacto"
+                  name="telefonoContacto"
+                  type="tel"
+                  value={proveedor.telefonoContacto}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="emailContacto">Email de Contacto</Label>
+                <Input
+                  id="emailContacto"
+                  name="emailContacto"
+                  type="email"
+                  value={proveedor.emailContacto}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="pais">País</Label>
+                <Input
+                  id="pais"
+                  name="pais"
+                  value={proveedor.pais}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ciudad">Ciudad</Label>
+                <Input
+                  id="ciudad"
+                  name="ciudad"
+                  value={proveedor.ciudad}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="codigoPostal">Código Postal</Label>
+                <Input
+                  id="codigoPostal"
+                  name="codigoPostal"
+                  value={proveedor.codigoPostal}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="coordenadas">Coordenadas (lat,long)</Label>
+                <Input
+                  id="coordenadas"
+                  name="coordenadas"
+                  value={proveedor.latitud && proveedor.longitud}
+                  onChange={(e) => handleCoordenadasCliente(e.target.value)}
+                  placeholder="por ejemplo: 15.665394064189494, -91.71131300914816"
+                />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="notas">Notas</Label>
+                <Input
+                  id="notas"
+                  name="notas"
+                  value={proveedor.notas}
+                  onChange={handleChange}
+                  placeholder="Notas adicionales sobre el proveedor"
                 />
               </div>
             </div>

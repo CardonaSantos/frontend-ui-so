@@ -59,3 +59,4 @@ enum MetodoPago {
 }
 
 export type SalesType = Venta[];
+export type SaleTypeOne = Venta;

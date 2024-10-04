@@ -502,7 +502,7 @@ export default function ProspectoFormulario() {
     <div className="">
       {prospectBoolean ? (
         <div className="">
-          <Card className="w-full max-w-4xl mx-auto">
+          <Card className="w-full max-w-4xl mx-auto shadow-xl">
             <CardHeader>
               <CardTitle>Registro de Nuevo Prospecto</CardTitle>
             </CardHeader>
@@ -898,7 +898,8 @@ export default function ProspectoFormulario() {
                 </DialogTitle>
               </DialogHeader>
               <p className="text-center">
-                ¿Está seguro de que desea iniciar este prospecto?
+                ¿Está seguro de que desea iniciar este prospecto con la
+                información ingresada?
               </p>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setOpen(false)}>
