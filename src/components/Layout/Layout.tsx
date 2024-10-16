@@ -114,7 +114,7 @@ export default function Layout({ children }: LayoutProps) {
       // Configurar intervalo para enviar la ubicación cada 30 segundos (30000ms)
       const interval = setInterval(() => {
         sendMyLocation();
-      }, 90000);
+      }, 60000);
       setLocationInterval(interval);
       // Limpiar el intervalo al desmontar el componente o al desconectar
       return () => {
