@@ -110,11 +110,11 @@ export default function Layout({ children }: LayoutProps) {
   };
 
   useEffect(() => {
-    if (socket && tokenUser) {
+    if (socket && tokenUser && tokenUser.rol === "VENDEDOR") {
       // Configurar intervalo para enviar la ubicación cada 30 segundos (30000ms)
       const interval = setInterval(() => {
         sendMyLocation();
-      }, 60000);
+      }, 45000);
       setLocationInterval(interval);
       // Limpiar el intervalo al desmontar el componente o al desconectar
       return () => {
