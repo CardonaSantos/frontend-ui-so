@@ -29,6 +29,8 @@ export default function CrearCategoria() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<number | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -54,7 +56,7 @@ export default function CrearCategoria() {
     if (!editingCategory) return;
 
     try {
-      const response = await axios.put(
+      const response = await axios.patch(
         `${API_URL}/categories/${editingCategory.id}`,
         {
           nombre: categoria.nombre,
@@ -95,16 +97,32 @@ export default function CrearCategoria() {
     setEditingCategory(null);
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async () => {
+    if (categoryToDelete === null) return;
+
     try {
-      const response = await axios.delete(`${API_URL}/categories/${id}`);
+      const response = await axios.delete(
+        `${API_URL}/categories/${categoryToDelete}`
+      );
       if (response.status === 200) {
         toast.success("Categoría eliminada");
         getCategories(); // Refrescar la lista
       }
     } catch (error) {
       toast.error("Error al eliminar categoría");
+    } finally {
+      closeConfirmDialog();
     }
+  };
+
+  const openConfirmDialog = (id: number) => {
+    setCategoryToDelete(id);
+    setIsConfirmDialogOpen(true);
+  };
+
+  const closeConfirmDialog = () => {
+    setIsConfirmDialogOpen(false);
+    setCategoryToDelete(null);
   };
 
   useEffect(() => {
@@ -154,7 +172,7 @@ export default function CrearCategoria() {
                 </Button>
                 <Button
                   variant="destructive"
-                  onClick={() => handleDelete(category.id)}
+                  onClick={() => openConfirmDialog(category.id)}
                 >
                   <TrashIcon className="w-5 h-5" />
                 </Button>
@@ -196,6 +214,31 @@ export default function CrearCategoria() {
                 <Button type="submit">Guardar Cambios</Button>
               </div>
             </form>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Dialogo de confirmación para eliminar */}
+      {isConfirmDialogOpen && (
+        <Dialog open={isConfirmDialogOpen} onOpenChange={closeConfirmDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-center">
+                Confirmar Eliminación
+              </DialogTitle>
+            </DialogHeader>
+            <p className="text-center">
+              ¿Estás seguro que quieres eliminar esta categoría? Será eliminada
+              de todos los productos donde fue referenciada
+            </p>
+            <div className="flex justify-end space-x-2">
+              <Button variant="secondary" onClick={closeConfirmDialog}>
+                Cancelar
+              </Button>
+              <Button variant="destructive" onClick={handleDelete}>
+                Eliminar
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       )}

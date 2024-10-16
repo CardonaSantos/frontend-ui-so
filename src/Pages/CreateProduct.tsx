@@ -60,10 +60,30 @@ export default function CreateProduct() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (formData.precio <= 0) {
+      toast.warning("El precio no debe ser menor o igual a cero");
+      return;
+    }
+
+    if (formData.categoriaIds.length <= 0) {
+      toast.warning("El producto debe pertenecer a al menos una categoría");
+      return;
+    }
+
     try {
       const response = await axios.post(`${API_URL}/product`, formData);
       if (response.status === 201) {
         toast.success("Producto creado exitosamente");
+        setFormData({
+          nombre: "",
+          codigoProducto: "",
+          descripcion: "",
+          categoriaIds: [] as number[],
+          proveedor: "",
+          precio: 0,
+          precioVenta: 0,
+        });
       }
     } catch (error) {
       console.log(error);
@@ -149,7 +169,6 @@ export default function CreateProduct() {
               name="descripcion"
               value={formData.descripcion}
               onChange={handleChange}
-              required
             />
           </div>
 

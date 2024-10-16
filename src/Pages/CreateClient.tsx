@@ -54,10 +54,7 @@ interface Municipio {
 
 export default function CreateClient() {
   const [errors, setErrors] = useState<Partial<FormData>>({});
-  // const [isSubmitting, setIsSubmitting] = useState(false);
-  // const [submitError, setSubmitError] = useState<string | null>(null);
   const [departamentos2, setDepartamentos] = useState<Departamento[]>([]);
-  // const [selectedDepartamento, setSelectedDepartamento] = useState<number>();
   const [municipios, setMunicipios] = useState<Municipio[]>([]);
 
   const [formData, setFormData] = useState<FormData>({
@@ -73,11 +70,8 @@ export default function CreateClient() {
     presupuestoMensual: "",
     preferenciaContacto: "",
     comentarios: "",
-    //ubiccaciones
     departamentoId: 0,
     municipioId: 0,
-    // latitud: ,
-    // longitud: null,
     latitud: 0, // Aquí se define como number
     longitud: 0, // Aquí se define como number
   });
@@ -134,25 +128,7 @@ export default function CreateClient() {
         toast.success("Cliente creado exitosamente");
         setTimeout(() => {
           window.location.reload();
-        }, 2000);
-        setFormData({
-          nombre: "",
-          correo: "",
-          telefono: "",
-          direccion: "",
-          municipio: "", //No confundir con el ID
-          departamento: "", //No confundir con el ID
-          tipoCliente: "",
-          categoriasInteres: [],
-          volumenCompra: "",
-          presupuestoMensual: "",
-          preferenciaContacto: "",
-          comentarios: "",
-          departamentoId: 0,
-          municipioId: 0,
-          latitud: 0, // Aquí se define como number
-          longitud: 0, // Aquí se define como number
-        });
+        }, 1000);
       }
     } catch (error) {
       toast.error("Error al crear cliente");
@@ -233,6 +209,15 @@ export default function CreateClient() {
       ...prevData,
       latitud: lat,
       longitud: lng,
+    }));
+  };
+
+  const handleCheckboxChange = (categoria: string, checked: boolean) => {
+    setFormData((prev) => ({
+      ...prev,
+      categoriasInteres: checked
+        ? [...prev.categoriasInteres, categoria]
+        : prev.categoriasInteres.filter((c) => c !== categoria),
     }));
   };
 
@@ -427,6 +412,36 @@ export default function CreateClient() {
                 <SelectItem value="mas20000">Más de Q20,000</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold">Categorías de Interés</h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {[
+                "Ropa de Mujer",
+                "Ropa de Hombre",
+                "Ropa Infantil",
+                "Accesorios",
+                "Calzado",
+                "Ropa Deportiva",
+                "Ropa Formal",
+                "Ropa de Trabajo",
+                "Ropa de Marca",
+              ].map((categoria) => (
+                <div key={categoria} className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id={categoria}
+                    checked={formData.categoriasInteres.includes(categoria)}
+                    onChange={(e) =>
+                      handleCheckboxChange(categoria, e.target.checked)
+                    }
+                    className="form-checkbox h-5 w-5 text-indigo-600 transition duration-150 ease-in-out"
+                  />
+                  <Label htmlFor={categoria}>{categoria}</Label>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Preferencia de Comunicación */}

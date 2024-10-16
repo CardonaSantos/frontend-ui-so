@@ -13,6 +13,7 @@ import {
   ShoppingBag,
   LocateIcon,
   Container,
+  Tags,
 } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
@@ -31,6 +32,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Link } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 
 export interface Ubicacion {
   id: number;
@@ -72,6 +75,12 @@ export interface Cliente {
   ubicacion: Ubicacion;
 }
 const API_URL = import.meta.env.VITE_API_URL;
+interface UserTokenInfo {
+  nombre: string;
+  correo: string;
+  rol: string;
+  sub: number;
+}
 
 export default function ClientesList() {
   const [customers, setCustomers] = useState<Cliente[] | null>(null);
@@ -87,6 +96,21 @@ export default function ClientesList() {
     volumenCompra: "",
     presupuestoMensual: "",
   });
+
+  const [tokenUser, setTokenUser] = useState<UserTokenInfo | null>(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+
+    if (token) {
+      try {
+        const decodedToken = jwtDecode<UserTokenInfo>(token);
+        setTokenUser(decodedToken);
+      } catch (error) {
+        console.error("Error decoding token:", error);
+      }
+    }
+  }, []);
 
   async function getCustomers() {
     try {
@@ -397,37 +421,50 @@ export default function ClientesList() {
 
         <Button onClick={handleLimpiarFiltro}>Limpiar filtro</Button>
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredCustomers &&
           filteredCustomers.map((cliente) => (
-            <Card className="w-full max-w-md mx-auto overflow-hidden  hover:shadow-xl shadow-lg">
+            <Card
+              key={cliente.id} // Asegúrate de tener una `key` única
+              className="w-full max-w-md mx-auto overflow-hidden hover:shadow-xl shadow-lg"
+            >
               <CardHeader className="bg-transparent">
                 <div className="flex justify-between items-center">
                   <CardTitle className="text-sm font-bold truncate">
-                    {cliente.nombre}
+                    {cliente.nombre ? cliente.nombre : "Nombre no disponible"}
                   </CardTitle>
                 </div>
                 <div className="">
-                  <Badge variant="default" className="text-xs ">
-                    {cliente.tipoCliente}
+                  <Badge variant="default" className="text-xs">
+                    {cliente.tipoCliente
+                      ? cliente.tipoCliente
+                      : "Tipo no definido"}
                   </Badge>
                 </div>
               </CardHeader>
               <CardContent className="p-4">
                 <div className="space-y-2">
-                  <p className="flex items-center0">
-                    <MailIcon className="mr-2 h-4 w-4" /> {cliente.correo}
+                  <p className="flex items-center">
+                    <MailIcon className="mr-2 h-4 w-4" />
+                    {cliente.correo ? cliente.correo : "Correo no disponible"}
                   </p>
-                  <p className="flex items-center ">
-                    <PhoneIcon className="mr-2 h-4 w-4" /> {cliente.telefono}
+                  <p className="flex items-center">
+                    <PhoneIcon className="mr-2 h-4 w-4" />
+                    {cliente.telefono
+                      ? cliente.telefono
+                      : "Teléfono no disponible"}
                   </p>
-                  <p className="flex items-center ">
-                    <MapPinIcon className="mr-2 h-4 w-4" /> {cliente.direccion}
+                  <p className="flex items-center">
+                    <MapPinIcon className="mr-2 h-4 w-4" />
+                    {cliente.direccion
+                      ? cliente.direccion
+                      : "Dirección no disponible"}
                   </p>
-                  <p className="flex items-center ">
-                    <BuildingIcon className="mr-2 h-4 w-4" />{" "}
-                    {cliente.municipio.nombre}, {cliente.departamento.nombre}
+                  <p className="flex items-center">
+                    <BuildingIcon className="mr-2 h-4 w-4" />
+                    {cliente.municipio?.nombre && cliente.departamento?.nombre
+                      ? `${cliente.municipio.nombre}, ${cliente.departamento.nombre}`
+                      : "Ubicación no disponible"}
                   </p>
                 </div>
 
@@ -438,37 +475,68 @@ export default function ClientesList() {
                     </AccordionTrigger>
                     <AccordionContent>
                       <div className="space-y-2 mt-2">
-                        <p className="flex items-center ">
-                          <CalendarIcon className="mr-2 h-4 w-4" /> Creado:{" "}
-                          {new Date(cliente.creadoEn).toLocaleDateString()}
+                        <p className="flex items-center">
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          Creado:{" "}
+                          {cliente.creadoEn
+                            ? new Date(cliente.creadoEn).toLocaleDateString()
+                            : "Fecha no disponible"}
                         </p>
-                        <p className="flex items-center ">
-                          <DollarSignIcon className="mr-2 h-4 w-4" />{" "}
-                          Presupuesto: {cliente.presupuestoMensual}
+                        <p className="flex items-center">
+                          <DollarSignIcon className="mr-2 h-4 w-4" />
+                          Presupuesto:{" "}
+                          {cliente.presupuestoMensual
+                            ? cliente.presupuestoMensual
+                            : "No especificado"}
                         </p>
-                        <p className="flex items-center ">
-                          <MessageCircleIcon className="mr-2 h-4 w-4" />{" "}
-                          Contacto: {cliente.preferenciaContacto}
+                        <p className="flex items-center">
+                          <MessageCircleIcon className="mr-2 h-4 w-4" />
+                          Contacto:{" "}
+                          {cliente.preferenciaContacto
+                            ? cliente.preferenciaContacto
+                            : "Preferencia no disponible"}
                         </p>
-                        <p className="flex items-center ">
-                          <UserIcon className="mr-2 h-4 w-4" /> Volumen de
-                          compra: {cliente.volumenCompra}
+                        <p className="flex items-center">
+                          <UserIcon className="mr-2 h-4 w-4" />
+                          Volumen de compra:{" "}
+                          {cliente.volumenCompra
+                            ? cliente.volumenCompra
+                            : "Volumen no disponible"}
+                        </p>
+                        <p className="flex items-center">
+                          <ShoppingBag className="mr-2 h-4 w-4" />
+                          Compras hechas:{" "}
+                          {cliente.ventas?.length
+                            ? cliente.ventas.length
+                            : "No hay ventas registradas"}
                         </p>
 
-                        <p className="flex items-center ">
-                          <ShoppingBag className="mr-2 h-4 w-4" /> Compras
-                          hechas: {cliente.ventas.length}
+                        <p className="flex items-center">
+                          <Container className="mr-2 h-4 w-4" />
+                          <Link to={`/historial-cliente-ventas/${cliente.id}`}>
+                            Ver historial de compras
+                          </Link>
                         </p>
 
-                        <p className="flex items-center ">
-                          <Container className="mr-2 h-4 w-4" /> Ver historial
-                          de compras: Proximamente...
+                        <p className="flex items-center">
+                          <Tags className="mr-2 h-4 w-4" />
+                          Intereses:{" "}
+                          {cliente.categoriasInteres &&
+                          cliente.categoriasInteres.length > 0
+                            ? cliente.categoriasInteres.join(", ")
+                            : "Ninguno"}
                         </p>
 
-                        <p className="t">Comentarios: {cliente.comentarios}</p>
+                        <p className="t">
+                          Comentarios:{" "}
+                          {cliente.comentarios
+                            ? cliente.comentarios
+                            : "Sin comentarios"}
+                        </p>
+
                         <div className="flex items-center justify-center">
-                          {cliente.ubicacion.latitud &&
-                          cliente.ubicacion.longitud ? (
+                          {cliente.ubicacion?.latitud &&
+                          cliente.ubicacion?.longitud ? (
                             <div className="flex items-center justify-center">
                               <LocateIcon className="m-2" />
                               <a
@@ -482,7 +550,7 @@ export default function ClientesList() {
                             </div>
                           ) : (
                             <div>
-                              <p className="flex items-center ">
+                              <p className="flex items-center">
                                 No hay ubicaciones guardadas
                               </p>
                             </div>
@@ -492,23 +560,24 @@ export default function ClientesList() {
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
+                {tokenUser?.rol === "ADMIN" ? (
+                  <div className="mt-4 flex justify-end">
+                    <a href={`/editar-cliente/${cliente.id}`}>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="mr-2"
+                      >
+                        Editar
+                      </Button>
+                    </a>
 
-                <div className="mt-4 flex justify-end">
-                  <a href={`/editar-cliente/${cliente.id}`}>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="mr-2"
-                    >
-                      Editar
+                    <Button variant="destructive" size="sm">
+                      Eliminar
                     </Button>
-                  </a>
-
-                  <Button variant="destructive" size="sm">
-                    Eliminar
-                  </Button>
-                </div>
+                  </div>
+                ) : null}
               </CardContent>
             </Card>
           ))}

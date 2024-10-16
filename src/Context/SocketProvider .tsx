@@ -38,26 +38,24 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (user) {
+      console.log("Intentando conectar con el socket, userId:", user.sub);
       const newSocket = io(`${API_URL}`, {
         query: {
-          userId: user.sub,
+          userId: user.sub, // Asegúrate de que este es el valor correcto
           role: user.rol,
         },
         transports: ["websocket"], // Forzar el uso de WebSocket
       });
 
       setSocket(newSocket);
-
       newSocket.on("connect", () => {
         console.log("Socket conectado:", newSocket.id);
       });
 
       newSocket.on("connect_error", (error) => {
         console.error("Error en la conexión del socket:", error.message);
-        console.error("Detalles del error:", error);
       });
 
-      // Limpiar la conexión cuando el componente se desmonta
       return () => {
         newSocket.disconnect();
       };

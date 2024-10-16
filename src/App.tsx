@@ -28,7 +28,6 @@ import CrearCategoria from "./Pages/CrearCategoria";
 import CrearProveedor from "./Pages/CrearProveedor";
 import StockDeliveryRecords from "./Pages/StockDeliveryRecords";
 import CreateClient from "./Pages/CreateClient";
-import Prospecto from "./Pages/Prospecto";
 import ProspectoFormulario from "./Pages/ProspectoFormulario";
 import ProspectoHistorial from "./Pages/ProspectoHistorial";
 import ProspectoUbicacion from "./Pages/MapProspect/ProspectoUbicacion";
@@ -36,6 +35,12 @@ import PdfPage from "./components/PDF/PdfPage";
 import DeliveryPdfPage from "./components/PDF/DeliveryPdfPage";
 import EditCustomer from "./Pages/Tools/EditCustomer";
 import { ProtectedRoute } from "./components/Auth/ProtectedRoute";
+import DashboardEmp from "./Pages/DashboardEmployee/DashboardEmp";
+import { ProtectedRouteAdmin } from "./components/Auth/ProtectedRouteAdmin";
+import MySales from "./Pages/EmployePages/MySales";
+import RegistroVisita from "./Pages/RegistroVisita";
+import VisitasTable from "./Pages/Dates/VisitasTable";
+import CustomerSales from "./Pages/CustomerSales/CustomerSales";
 
 function App() {
   return (
@@ -57,11 +62,21 @@ function App() {
             <Route
               path="/dashboard"
               element={
-                <ProtectedRoute>
+                <ProtectedRouteAdmin>
                   <Dashboard />
+                </ProtectedRouteAdmin>
+              }
+            />
+
+            <Route
+              path="/dashboard-empleado"
+              element={
+                <ProtectedRoute>
+                  <DashboardEmp />
                 </ProtectedRoute>
               }
             />
+
             <Route
               path="/clientes"
               element={
@@ -199,14 +214,14 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route
+            {/* <Route
               path="/visita"
               element={
                 <ProtectedRoute>
                   <Prospecto />
                 </ProtectedRoute>
               }
-            />
+            /> */}
             <Route
               path="/prospecto"
               element={
@@ -236,6 +251,42 @@ function App() {
               element={
                 <ProtectedRoute>
                   <EditCustomer />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/mis-ventas"
+              element={
+                <ProtectedRoute>
+                  <MySales />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/visita"
+              element={
+                <ProtectedRoute>
+                  <RegistroVisita />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/historial-visitas"
+              element={
+                <ProtectedRoute>
+                  <VisitasTable />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/historial-cliente-ventas/:id"
+              element={
+                <ProtectedRoute>
+                  <CustomerSales />
                 </ProtectedRoute>
               }
             />

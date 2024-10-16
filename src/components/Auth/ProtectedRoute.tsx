@@ -7,5 +7,12 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const isAuth = localStorage.getItem("authToken") !== null;
-  return isAuth ? children : <Navigate to="/login" />;
+
+  // Si no está autenticado, redirigir al login
+  if (!isAuth) {
+    return <Navigate to="/login" />;
+  }
+
+  // Si está autenticado, renderizar el contenido
+  return <>{children}</>;
 }

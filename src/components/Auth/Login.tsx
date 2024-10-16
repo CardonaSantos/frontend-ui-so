@@ -12,7 +12,7 @@ import {
 import axios from "axios";
 const API_URL = import.meta.env.VITE_API_URL;
 
-import logo from "../../assets/images/logoNova.png";
+import logo from "../../assets/images/logoEmpresa.png";
 
 import { toast, Toaster } from "sonner";
 
@@ -79,9 +79,7 @@ export default function Login() {
       <Card className="w-full max-w-md md:max-w-2xl mx-auto">
         <CardHeader>
           <CardTitle className="text-center">Login</CardTitle>
-          <h2 className="text-gray-400 font-semibold text-center pt-5">
-            Desarrollado por
-          </h2>
+
           <div className="flex justify-center items-center">
             <img src={logo} alt="Logo" height={90} width={160} />
           </div>

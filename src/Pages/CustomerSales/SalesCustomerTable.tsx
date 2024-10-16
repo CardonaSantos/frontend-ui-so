@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { SalesType, SaleTypeOne } from "../../Utils/Types/Sales";
 
-import { Badge } from "../ui/badge";
-import { Card, CardContent } from "../ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -11,25 +11,25 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../ui/table";
+} from "@/components/ui/table";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "../ui/collapsible";
+} from "@/components/ui/collapsible";
 import { ChevronDown, ChevronUp, Eye, FileSpreadsheet } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
-import { Input } from "../ui/input";
-import { Button } from "../ui/button";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogTitle,
   DialogTrigger,
-} from "../ui/dialog";
-import { ScrollArea } from "../ui/scroll-area";
-import { Separator } from "../ui/separator";
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 interface SalesTypeProp {
   sales: SalesType | null;
 }
@@ -41,14 +41,10 @@ type Departamento = {
   nombre: string;
 };
 
-const TableSale: React.FC<SalesTypeProp> = ({ sales }) => {
+const SalesCustomerTable: React.FC<SalesTypeProp> = ({ sales }) => {
   // const [municipios, setMunicipios] = useState<Municipio[]>([]);
   const [departamentos, setDepartamentos] = useState<Departamento[]>([]);
   console.log(departamentos);
-
-  // const [selectedDepartamento, setSelectedDepartamento] = useState<
-  //   number | null
-  // >(null);
 
   //CREAR UN STATE PARA EL FILTRO, CON LAS PROPIEDADES QUE QUEREMOS FILTRAR Y QUE TIENE NUESTRO OBJETO A FILTRAR
   const [filtros, setFiltros] = useState({
@@ -61,19 +57,6 @@ const TableSale: React.FC<SalesTypeProp> = ({ sales }) => {
     montoMin: "",
     montoMax: "",
   });
-
-  const limpiarFiltro = () => {
-    setFiltros({
-      idVenta: "",
-      nombreCliente: "",
-      nombreVendedor: "",
-      metodoPago: "",
-      fechaInicio: "",
-      fechaFin: "",
-      montoMin: "",
-      montoMax: "",
-    });
-  };
 
   const getDepartamentos = async () => {
     try {
@@ -154,78 +137,7 @@ const TableSale: React.FC<SalesTypeProp> = ({ sales }) => {
   ) {
     return (
       <div>
-        <div className="bg-muted p-4 rounded-lg mb-4 shadow-lg">
-          <div className="flex flex-col md:flex-row justify-between items-center mb-4">
-            <div className="text-xl font-semibold">
-              Total ventas: {ventasTotales}
-            </div>
-            <div className="flex space-x-2">
-              <Button variant="outline" onClick={() => handleExport()}>
-                <FileSpreadsheet className="mr-2 h-4 w-4" />
-                Exportar Excel
-              </Button>
-              {/* <Button variant="outline" onClick={() => handleExport()}>
-              <Download className="mr-2 h-4 w-4" />
-              Exportar CSV
-            </Button> */}
-            </div>
-          </div>
-
-          {/* Filtros */}
-          <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2">
-            <div className="flex-1">
-              <Input
-                type="text"
-                placeholder="Buscar por número de venta..."
-                value={filtros.idVenta}
-                onChange={(e) => handleFiltroChange("idVenta", e.target.value)}
-                className="w-full"
-              />
-            </div>
-
-            <div className="flex-1">
-              <Input
-                type="text"
-                placeholder="Buscar por nombre cliente..."
-                value={filtros.nombreCliente}
-                onChange={(e) =>
-                  handleFiltroChange("nombreCliente", e.target.value)
-                }
-                className="w-full"
-              />
-            </div>
-
-            <div className="flex-1">
-              <Input
-                type="text"
-                placeholder="Buscar por nombre vendedor..."
-                value={filtros.nombreVendedor}
-                onChange={(e) =>
-                  handleFiltroChange("nombreVendedor", e.target.value)
-                }
-                className="w-full"
-              />
-            </div>
-
-            <div className="flex-1">
-              <Input
-                type="date"
-                value={filtros.fechaInicio}
-                onChange={(e) =>
-                  handleFiltroChange("fechaInicio", e.target.value)
-                }
-                className="w-full"
-              />
-            </div>
-
-            <div className="flex-1">
-              <Button onClick={limpiarFiltro}>Limpiar filtro</Button>
-            </div>
-          </div>
-        </div>
-        <h2 className="text-center text-xl font-bold">
-          No hay ventas disponibles
-        </h2>
+        <h2>No hay ventas disponibles</h2>
       </div>
     );
   }
@@ -278,18 +190,6 @@ const TableSale: React.FC<SalesTypeProp> = ({ sales }) => {
 
           <div className="flex-1">
             <Input
-              type="text"
-              placeholder="Buscar por nombre vendedor..."
-              value={filtros.nombreVendedor}
-              onChange={(e) =>
-                handleFiltroChange("nombreVendedor", e.target.value)
-              }
-              className="w-full"
-            />
-          </div>
-
-          <div className="flex-1">
-            <Input
               type="date"
               value={filtros.fechaInicio}
               onChange={(e) =>
@@ -297,10 +197,6 @@ const TableSale: React.FC<SalesTypeProp> = ({ sales }) => {
               }
               className="w-full"
             />
-          </div>
-
-          <div className="flex-1">
-            <Button onClick={limpiarFiltro}>Limpiar filtro</Button>
           </div>
         </div>
       </div>
@@ -505,4 +401,4 @@ const TableSale: React.FC<SalesTypeProp> = ({ sales }) => {
   );
 };
 
-export default TableSale;
+export default SalesCustomerTable;

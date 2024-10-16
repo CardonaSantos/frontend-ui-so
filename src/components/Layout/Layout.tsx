@@ -1,33 +1,31 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Menu,
   Home,
   Bell,
-  ChevronDown,
   User,
   LogOut,
-  User2,
-  Users2Icon,
-  HandCoins,
-  BookUser,
-  ListChecks,
-  MessageSquareMore,
-  ShoppingBasket,
-  CirclePlus,
-  SquareChartGanttIcon,
-  PackageSearch,
   ShoppingBag,
   MailIcon,
-  BookmarkCheck,
   UserCheck,
-  Tag,
-  ClipboardList,
   UserPlus,
   FileText,
   MapPin,
+  X,
+  Users,
+  ShoppingCart,
+  CheckSquare,
+  Box,
+  Shirt,
+  PlusSquare,
+  Grid,
+  Tags,
+  Package,
+  ListCheck,
+  CircleX,
+  ClipboardList,
 } from "lucide-react";
 import { Button } from "../ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Link, Outlet } from "react-router-dom";
 import { ModeToggle } from "../mode-toggle";
 import {
@@ -44,26 +42,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../ui/dialog";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 
-import logo from "../../assets/images/logo.png";
+const API_URL = import.meta.env.VITE_API_URL;
+
+import logo from "../../assets/images/logoEmpresa.png";
 import { jwtDecode } from "jwt-decode";
 import { useSocket } from "../../Context/SocketProvider ";
-
-const notifications = [
-  { id: 1, message: "El usuario x ha registrado su entrada" },
-  { id: 2, message: "El usuario y ha registrado una venta" },
-  { id: 3, message: "El usuario z ha comenzado un prospecto" },
-  {
-    id: 4,
-    message:
-      "El usuario w ha hecho una peticion de descuento para el cliente v",
-  },
-];
+import axios from "axios";
+import { toast } from "sonner";
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -74,15 +60,11 @@ export default function Layout({ children }: LayoutProps) {
   const [locationInterval, setLocationInterval] =
     useState<NodeJS.Timeout | null>(null);
 
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
-
   const handleLogout = () => {
     // Aquí manejas el cierre de sesión
     localStorage.removeItem("authToken");
     window.location.href = "/login"; // O redirecciona al login
   };
-
-  const [isOpen, setIsOpen] = useState(false);
 
   interface UserTokenInfo {
     nombre: string;
@@ -96,7 +78,6 @@ export default function Layout({ children }: LayoutProps) {
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
-
     if (token) {
       try {
         const decodedToken = jwtDecode<UserTokenInfo>(token);
@@ -133,10 +114,8 @@ export default function Layout({ children }: LayoutProps) {
       // Configurar intervalo para enviar la ubicación cada 30 segundos (30000ms)
       const interval = setInterval(() => {
         sendMyLocation();
-      }, 60000); // Cambia el valor según la frecuencia deseada (milisegundos)
-
+      }, 90000);
       setLocationInterval(interval);
-
       // Limpiar el intervalo al desmontar el componente o al desconectar
       return () => {
         if (locationInterval) {
@@ -146,540 +125,414 @@ export default function Layout({ children }: LayoutProps) {
     }
   }, [socket, tokenUser]);
 
-  // 60000
-  // 90000
+  // path="/historial-visitas"
+
+  const menuItems = [
+    // { icon: Home, label: "Home", href: "/" },
+    { icon: ShoppingBag, label: "Hacer venta", href: "/hacer-ventas" },
+    { icon: Users, label: "Clientes", href: "/clientes" },
+    { icon: UserPlus, label: "Añadir cliente", href: "/crear-cliente" },
+    { icon: ShoppingCart, label: "Historial Ventas", href: "/ventas" },
+    { icon: FileText, label: "Historial Prospectos", href: "/historial-citas" },
+    {
+      icon: ClipboardList,
+      label: "Historial Visitas",
+      href: "/historial-visitas",
+    },
+
+    { icon: UserCheck, label: "Usuarios", href: "/usuarios" },
+    { icon: User, label: "Empleados", href: "/empleados" },
+    {
+      icon: ListCheck,
+      label: "Check Empleados",
+      href: "/historial-empleados-check",
+    },
+    { icon: CheckSquare, label: "Check", href: "/registrar-entrada-salida" },
+    { icon: Shirt, label: "Productos", href: "/ver-productos" },
+    { icon: PlusSquare, label: "Crear productos", href: "/crear-productos" },
+    { icon: Grid, label: "Inventario", href: "/asignar-stock" },
+    { icon: Tags, label: "Categorias", href: "/crear-categoria" },
+    { icon: Package, label: "Proveedores", href: "/crear-proveedor" },
+    { icon: Box, label: "Registro de entregas", href: "/registro-entregas" },
+    { icon: MapPin, label: "Visita", href: "/visita" },
+    { icon: FileText, label: "Prospecto", href: "/prospecto" },
+  ];
+
+  const vendedorMenuItems = [
+    { icon: Home, label: "Dashboard", href: "/dashboard-empleado" },
+
+    { icon: ShoppingBag, label: "Hacer venta", href: "/hacer-ventas" },
+    { icon: Users, label: "Clientes", href: "/clientes" },
+    { icon: CheckSquare, label: "Check", href: "/registrar-entrada-salida" },
+
+    // { icon: UserPlus, label: "Añadir cliente", href: "/crear-cliente" },
+    { icon: MapPin, label: "Visita", href: "/visita" },
+    { icon: FileText, label: "Prospecto", href: "/prospecto" },
+    { icon: ShoppingCart, label: "Mis Ventas", href: "/mis-ventas" },
+  ];
+
+  const [isSideMenuOpen, setIsSideMenuOpen] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const toggleSideMenu = () => {
+    setIsSideMenuOpen(!isSideMenuOpen);
+  };
+
+  //-------------------
+  const sideMenuRef = useRef<HTMLDivElement | null>(null);
+
+  const handleClickOutside = (event: MouseEvent) => {
+    if (
+      sideMenuRef.current &&
+      !sideMenuRef.current.contains(event.target as Node)
+    ) {
+      if (!isDesktop && isSideMenuOpen) {
+        toggleSideMenu(); // Cerrar el menú si se hace clic fuera de él
+      }
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isDesktop, isSideMenuOpen]);
+  //-----------------------------------
+  // Muestra diferentes elementos del menú según el rol
+  const getMenuItems = () => {
+    if (tokenUser?.rol === "ADMIN") {
+      return menuItems;
+    } else if (tokenUser?.rol === "VENDEDOR") {
+      return vendedorMenuItems;
+    }
+    return []; // En caso de que no tenga rol o rol no reconocido
+  };
+
+  interface Notification {
+    id: number; // El ID de la notificación en la base de datos
+    mensaje: string; // El mensaje de la notificación
+    leido: boolean; // Estado de la notificación (si ha sido leída o no)
+    remitenteId?: number; // El ID del remitente (opcional)
+    creadoEn: Date; // Fecha de creación de la notificación
+  }
+
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  //VERIFICAR QUE SE ESTÁ CONECTADO, TENGO EL SOCKET Y ES ADMIN
+  useEffect(() => {
+    if (socket && tokenUser?.rol === "ADMIN") {
+      socket.on("newNotification", (newNotification: Notification) => {
+        setNotifications((previaNotification) => [
+          ...previaNotification,
+          newNotification,
+        ]);
+      });
+    }
+
+    return () => {
+      if (socket) {
+        socket.off("newNotification");
+      }
+    };
+  }, [socket]);
+
+  const getNoti = async () => {
+    if (tokenUser?.rol === "ADMIN") {
+      try {
+        const response = await axios.get(
+          `${API_URL}/notifications/notifications/for-admin/${tokenUser.sub}`
+        );
+        if (response.status === 200) {
+          setNotifications(response.data);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  };
+
+  useEffect(() => {
+    const getNoti = async () => {
+      if (tokenUser?.rol === "ADMIN") {
+        try {
+          const response = await axios.get(
+            `${API_URL}/notifications/notifications/for-admin/${tokenUser.sub}`
+          );
+          if (response.status === 200) {
+            setNotifications(response.data);
+          }
+        } catch (error) {
+          console.log(error);
+        }
+      }
+    };
+    getNoti();
+  }, [tokenUser]);
+
+  console.log("Las notificaciones actuales son:", notifications);
+
+  const handleVisto = async (notificationId: number) => {
+    try {
+      const response = await axios.patch(
+        `${API_URL}/notifications/update-notify/${notificationId}`,
+        {
+          usuarioId: tokenUser?.sub,
+        }
+      );
+
+      if (response.status === 200) {
+        toast.success("Notificación eliminada");
+        getNoti();
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleDeleteAllNotifications = async () => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/notifications/delete-all-notifications-admin/${tokenUser?.sub}`
+      );
+      if (response.status === 200) {
+        toast.success("Notificaciones eliminadas");
+        getNoti();
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error("Error al eliminar notificaciones");
+    }
+  };
+
+  useEffect(() => {
+    if (socket) {
+      // Escuchar el evento específico para vendedores
+      socket.on("newNotificationToSeller", (newNotification) => {
+        console.log(
+          "La notificación entrante para vendedor es: ",
+          newNotification
+        );
+
+        setNotifications((previaNotification) => [
+          ...previaNotification,
+          newNotification,
+        ]);
+      });
+
+      // Limpiar el evento al desmontar el componente
+      return () => {
+        socket.off("newNotificationToSeller"); // Limpiar el evento específico para vendedores
+      };
+    }
+  }, [socket, tokenUser]); // Añadir tokenUser como dependencia para actualizar si cambia
+
+  console.log("Mis notificaciones como vendedor son: ", notifications);
+
+  // QUITARLE EL BOTON DE ELIMINAR AL DIALOG DE NOTIFICACIONES DE LOS VENDEDORES
+  //VERIFICAR ERRORES CON LA CREACION DE INSTANCIAS DE DESCUENTOS
+  //VOLVER A SUBIR TODOS LOS DEPARTAMENTOS Y PUEBLOS
+  //
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
-      {/* Sidebar for larger screens */}
-      <aside className="hidden w-64 border-r bg-gray-100/40 dark:bg-gray-800/50 lg:block">
-        <nav className="flex h-full flex-col">
-          <div className="flex h-14 items-center border-b px-4 bg-gray-200 dark:bg-gray-900">
-            <Link to={"/"}>
-              <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                Demo{" "}
-              </h1>
-            </Link>
-            <Link to={"/"}>
-              <img src={logo} alt="myLogo" width={60} />
-            </Link>
-          </div>
-
-          <ul className="flex-1 space-y-1 p-4 overflow-y-auto">
-            {/* Home Item */}
-            <li>
-              <a
-                href="/"
-                className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-              >
-                <Home className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                <span>Home</span>
-              </a>
-            </li>
-
-            {/* Clientes Item */}
-            <li>
-              <Link
-                to="/clientes"
-                className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-              >
-                <User2 className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                <span>Clientes</span>
-              </Link>
-            </li>
-
-            {/* Ventas Item */}
-            <li>
-              <Link
-                to="/ventas"
-                className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-              >
-                <HandCoins className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                <span>Ventas</span>
-              </Link>
-            </li>
-
-            {/* Usuarios Item */}
-            <li>
-              <Link
-                to="/usuarios"
-                className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-              >
-                <Users2Icon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                <span>Usuarios</span>
-              </Link>
-            </li>
-
-            {/* Empleados Item */}
-            <li>
-              <Link
-                to="/empleados"
-                className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-              >
-                <BookUser className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                <span>Empleados</span>
-              </Link>
-            </li>
-
-            {/* Check Empleados Item */}
-            <li>
-              <Link
-                to="/historial-empleados-check"
-                className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-              >
-                <ListChecks className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                <span>Check Empleados</span>
-              </Link>
-            </li>
-
-            {/* Historial Citas Item */}
-            <li>
-              <Link
-                to="/historial-citas"
-                className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-              >
-                <MessageSquareMore className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                <span>Historial Prospectos</span>
-              </Link>
-            </li>
-
-            <li>
-              <Link
-                to="/hacer-ventas"
-                className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-              >
-                <ShoppingBag className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                <span>Hacer venta</span>
-              </Link>
-            </li>
-
-            <li>
-              <Link
-                to="/registrar-entrada-salida"
-                className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-              >
-                <BookmarkCheck className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                <span>Check</span>
-              </Link>
-            </li>
-
-            <li>
-              <Link
-                to="/registro-entregas"
-                className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-              >
-                <ClipboardList className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                <span>Registro de entregas</span>
-              </Link>
-            </li>
-
-            <li>
-              <Link
-                to="/crear-cliente"
-                className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-              >
-                <UserPlus className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                <span>Añadir cliente</span>
-              </Link>
-            </li>
-
-            <li>
-              <Link
-                to="/visita"
-                className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-              >
-                <MapPin className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                <span>Visita</span>
-              </Link>
-            </li>
-
-            <li>
-              <Link
-                to="/prospecto"
-                className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-              >
-                <FileText className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                <span>Prospecto</span>
-              </Link>
-            </li>
-            {/* Productos Collapsible Section */}
-            <Collapsible>
-              <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 bg-gray-200 dark:bg-gray-800">
-                <div className="flex items-center space-x-3">
-                  <ShoppingBasket className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                  <span>Productos</span>
-                </div>
-                <ChevronDown className="h-4 w-4" />
-              </CollapsibleTrigger>
-              <CollapsibleContent className="smooth-scroll bg-gray-100 dark:bg-gray-900">
-                <ul className="ml-6 mt-2 space-y-1  ">
-                  <li>
-                    <Link
-                      to="/ver-productos"
-                      className="flex gap-2 items-center rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-                    >
-                      <PackageSearch className="h-4 w-4 text-gray-600 dark:text-gray-300" />
-                      <p>Ver productos</p>
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/crear-productos"
-                      className="flex gap-2 items-center rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-                    >
-                      <CirclePlus className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                      <span>Crear productos</span>
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/asignar-stock"
-                      className="flex gap-2 items-center rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-                    >
-                      <SquareChartGanttIcon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                      <span>Inventario</span>
-                    </Link>
-                  </li>
-
-                  <li>
-                    <Link
-                      to="/crear-categoria"
-                      className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-                    >
-                      <Tag className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                      <span>Crear Categorias</span>
-                    </Link>
-                  </li>
-
-                  <li>
-                    <Link
-                      to="/crear-proveedor"
-                      className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-                    >
-                      <UserCheck className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                      <span>Crear Proveedores</span>
-                    </Link>
-                  </li>
-                </ul>
-              </CollapsibleContent>
-            </Collapsible>
-          </ul>
-
-          <div className="flex justify-center p-4 bg-gray-200 dark:bg-gray-900">
-            <ModeToggle />
-          </div>
-        </nav>
-      </aside>
-
-      {/* Main content area */}
-      <div className="flex flex-1 flex-col overflow-hidden">
-        {/* MENU PARA VERSION MOBILE */}
-        <header className="flex h-14 items-center border-b px-4">
-          <Sheet open={isOpen} onOpenChange={setIsOpen}>
-            <SheetTrigger asChild>
-              <Button
-                variant="outline"
-                size="default"
-                className="mr-4 lg:hidden"
-              >
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent
-              side="left"
-              className="w-64 p-0 overflow-y-auto h-full max-h-screen"
+    <div className="flex h-screen flex-col bg-background">
+      {/* Top Navigation Bar */}
+      <header className="bg-background shadow-sm">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center">
+            <button
+              className="mr-4 rounded-md bg-secondary p-2 text-secondary-foreground hover:bg-secondary-hover focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 lg:hidden"
+              onClick={toggleSideMenu}
             >
-              <div className="flex h-14 items-center border-b px-4">
-                <h1 className="text-lg font-semibold">Sistema V1</h1>
-              </div>
-              <nav className="flex h-full flex-col">
-                <ul className="flex-1 space-y-1 p-4 overflow-y-auto">
-                  {/* Home Item */}
-                  <li>
-                    <a
-                      href="/"
-                      className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-                    >
-                      <Home className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                      <span>Home</span>
-                    </a>
-                  </li>
+              {isSideMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
+            </button>
+            <div className="flex items-center">
+              <a href={"/"} className="flex items-center">
+                <img className="h-16 w-16" src={logo} alt="Logo Empresa" />
+                <h2 className="ml-2 text-lg font-bold"> Marcas Guatemala</h2>
+              </a>
+            </div>
+          </div>
 
-                  {/* Clientes Item */}
-                  <li>
-                    <Link
-                      to="/clientes"
-                      className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-                    >
-                      <User2 className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                      <span>Clientes</span>
-                    </Link>
-                  </li>
-
-                  {/* Ventas Item */}
-                  <li>
-                    <Link
-                      to="/ventas"
-                      className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-                    >
-                      <HandCoins className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                      <span>Ventas</span>
-                    </Link>
-                  </li>
-
-                  {/* Usuarios Item */}
-                  <li>
-                    <Link
-                      to="/usuarios"
-                      className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-                    >
-                      <Users2Icon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                      <span>Usuarios</span>
-                    </Link>
-                  </li>
-
-                  {/* Empleados Item */}
-                  <li>
-                    <Link
-                      to="/empleados"
-                      className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-                    >
-                      <BookUser className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                      <span>Empleados</span>
-                    </Link>
-                  </li>
-
-                  {/* Check Empleados Item */}
-                  <li>
-                    <Link
-                      to="/historial-empleados-check"
-                      className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-                    >
-                      <ListChecks className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                      <span>Check Empleados</span>
-                    </Link>
-                  </li>
-
-                  {/* Historial Citas Item */}
-                  <li>
-                    <Link
-                      to="/historial-citas"
-                      className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-                    >
-                      <MessageSquareMore className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                      <span>Historial Prospectos</span>
-                    </Link>
-                  </li>
-
-                  <li>
-                    <Link
-                      to="/hacer-ventas"
-                      className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-                    >
-                      <ShoppingBag className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                      <span>Hacer venta</span>
-                    </Link>
-                  </li>
-
-                  <li>
-                    <Link
-                      to="/registrar-entrada-salida"
-                      className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-                    >
-                      <BookmarkCheck className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                      <span>Check</span>
-                    </Link>
-                  </li>
-
-                  <li>
-                    <Link
-                      to="/registro-entregas"
-                      className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-                    >
-                      <ClipboardList className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                      <span>Registro de entregas</span>
-                    </Link>
-                  </li>
-
-                  <li>
-                    <Link
-                      to="/crear-cliente"
-                      className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-                    >
-                      <UserPlus className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                      <span>Añadir cliente</span>
-                    </Link>
-                  </li>
-
-                  <li>
-                    <Link
-                      to="/visita"
-                      className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-                    >
-                      <MapPin className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                      <span>Visita</span>
-                    </Link>
-                  </li>
-
-                  <li>
-                    <Link
-                      to="/prospecto"
-                      className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-                    >
-                      <FileText className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                      <span>Prospecto</span>
-                    </Link>
-                  </li>
-                  {/* Productos Collapsible Section */}
-                  <Collapsible>
-                    <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 bg-gray-200 dark:bg-gray-800">
-                      <div className="flex items-center space-x-3">
-                        <ShoppingBasket className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                        <span>Productos</span>
-                      </div>
-                      <ChevronDown className="h-4 w-4" />
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="smooth-scroll bg-gray-100 dark:bg-gray-900">
-                      <ul className="ml-6 mt-2 space-y-1  ">
-                        <li>
-                          <Link
-                            to="/ver-productos"
-                            className="flex gap-2 items-center rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-                          >
-                            <PackageSearch className="h-4 w-4 text-gray-600 dark:text-gray-300" />
-                            <p>Ver productos</p>
-                          </Link>
-                        </li>
-                        <li>
-                          <Link
-                            to="/crear-productos"
-                            className="flex gap-2 items-center rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-                          >
-                            <CirclePlus className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                            <span>Crear productos</span>
-                          </Link>
-                        </li>
-                        <li>
-                          <Link
-                            to="/asignar-stock"
-                            className="flex gap-2 items-center rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-                          >
-                            <SquareChartGanttIcon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                            <span>Inventario</span>
-                          </Link>
-                        </li>
-
-                        <li>
-                          <Link
-                            to="/crear-categoria"
-                            className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-                          >
-                            <Tag className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                            <span>Crear Categorias</span>
-                          </Link>
-                        </li>
-
-                        <li>
-                          <Link
-                            to="/crear-proveedor"
-                            className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-                          >
-                            <UserCheck className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                            <span>Crear Proveedores</span>
-                          </Link>
-                        </li>
-                      </ul>
-                    </CollapsibleContent>
-                  </Collapsible>
-                </ul>
-              </nav>
-            </SheetContent>
-          </Sheet>
-          <h1 className="text-lg font-semibold lg:hidden">Demo</h1>
-          <div className="ml-auto flex items-center space-x-4">
+          <div className="flex items-center">
+            <div className="flex justify-center items-center p-4">
+              <ModeToggle />
+            </div>
             <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="default">
-                  <Bell className="h-5 w-5" />
-                  <span className="sr-only">Notifications</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
+              {tokenUser ? (
+                <DialogTrigger asChild>
+                  <button className="relative mr-4 rounded-full bg-secondary p-2 text-secondary-foreground hover:bg-secondary-hover focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+                    <Bell className="h-6 w-6" />
+                    {notifications.length > 0 && (
+                      <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">
+                        {notifications.length}
+                      </span>
+                    )}
+                  </button>
+                </DialogTrigger>
+              ) : null}
+              <DialogContent className="h-5/6 flex flex-col overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Notificaciones</DialogTitle>
                 </DialogHeader>
-                <ul className="space-y-2">
-                  {notifications.map((notification) => (
-                    <li
-                      key={notification.id}
-                      className="p-2 bg-gray-100 dark:bg-gray-800 rounded"
-                    >
-                      {notification.message}
-                    </li>
-                  ))}
-                </ul>
-              </DialogContent>
-            </Dialog>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="default">
-                  <User className="h-5 w-5" />
-                  <span className="sr-only">User menu</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
-                  <span>{tokenUser?.nombre}</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <MailIcon className="mr-2 h-4 w-4" />
-                  <span>{tokenUser?.correo}</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setShowLogoutModal(true)}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Cerrar Sesión</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <ModeToggle />
 
-            {/* Modal de confirmación de cierre de sesión */}
-            <Dialog open={showLogoutModal} onOpenChange={setShowLogoutModal}>
-              <DialogContent>
-                <DialogHeader>
-                  <h3 className="text-center">Confirmar Cierre de Sesión</h3>
-                  <p className="text-center">
-                    ¿Estás seguro de que deseas cerrar sesión?
-                  </p>
-                </DialogHeader>
-                <DialogFooter>
-                  <Button
-                    className="m-1"
-                    variant="outline"
-                    onClick={() => setShowLogoutModal(false)}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    className="m-1"
-                    variant="destructive"
-                    onClick={handleLogout}
-                  >
-                    Cerrar Sesión
-                  </Button>
-                </DialogFooter>
+                <div className="flex-1 overflow-y-auto">
+                  {notifications && notifications.length > 0 ? (
+                    notifications
+                      .sort(
+                        (a, b) =>
+                          new Date(b.creadoEn).getTime() -
+                          new Date(a.creadoEn).getTime()
+                      )
+                      .map((not) => (
+                        <div
+                          key={not.id}
+                          className="py-2 px-4 flex flex-col items-start border rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
+                        >
+                          <p className="text-foreground text-sm mb-1">
+                            {not.mensaje}
+                          </p>
+                          <div className="flex justify-between w-full items-center">
+                            <p
+                              style={{ fontSize: "10px" }}
+                              className="text-gray-500"
+                            >
+                              {not.creadoEn
+                                ? new Date(not.creadoEn).toLocaleString(
+                                    "es-GT",
+                                    {
+                                      dateStyle: "short",
+                                      timeStyle: "short",
+                                      hour12: true,
+                                    }
+                                  )
+                                : ""}
+                            </p>
+
+                            <div className="flex gap-2">
+                              {tokenUser?.rol === "ADMIN" ? (
+                                <Button
+                                  onClick={() => handleVisto(Number(not.id))}
+                                  size={"sm"}
+                                  className="flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-md"
+                                >
+                                  <CircleX />
+                                </Button>
+                              ) : null}
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                  ) : (
+                    <p className="text-center text-gray-500">
+                      No hay notificaciones
+                    </p>
+                  )}
+                </div>
+
+                {/* Sticky footer */}
+                {notifications && notifications.length >= 1 ? (
+                  <DialogFooter className="sticky bottom-0 p-1 shadow-md">
+                    {tokenUser?.rol === "ADMIN" ? (
+                      <Button onClick={handleDeleteAllNotifications}>
+                        Limpiar todo
+                      </Button>
+                    ) : null}
+                  </DialogFooter>
+                ) : null}
               </DialogContent>
             </Dialog>
+
+            {/* Menú desplegable para el avatar de usuario */}
+            <div className="relative">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="default">
+                    <User className="h-5 w-5" />
+                    <span className="sr-only">User menu</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem>
+                    <User className="mr-2 h-4 w-4" />
+                    <span>{tokenUser?.nombre}</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <MailIcon className="mr-2 h-4 w-4" />
+                    <span>{tokenUser?.correo}</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span onClick={handleLogout}>Cerrar Sesión</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
-        </header>
+        </div>
+      </header>
 
-        {/* Main content */}
-        <main className="flex-1 overflow-y-auto p-4">
-          <div className="mx-auto max-w-6xl">{children || <Outlet />}</div>
+      <div className="flex flex-1 overflow-hidden">
+        {/* Side Menu */}
+        <nav
+          ref={sideMenuRef}
+          className={`w-64 transform bg-background p-4 transition-transform duration-300 ease-in-out ${
+            isDesktop || isSideMenuOpen ? "translate-x-0" : "-translate-x-full"
+          } fixed left-0 top-16 bottom-0 z-10 overflow-y-auto shadow-lg lg:relative lg:top-0 lg:translate-x-0 lg:shadow-none`}
+        >
+          <ul className="space-y-2">
+            {tokenUser?.rol == "ADMIN" ? (
+              <li>
+                <a
+                  className="flex items-center rounded-lg p-2 text-foreground hover:bg-muted"
+                  href="/"
+                >
+                  <Home className="mr-3 h-6 w-6" />
+                  Home
+                </a>
+              </li>
+            ) : null}
+            {getMenuItems().map((item, index) => (
+              <li key={index}>
+                <Link
+                  to={item.href}
+                  className="flex items-center rounded-lg p-2 text-foreground hover:bg-muted"
+                >
+                  <item.icon className="mr-3 h-6 w-6" />
+                  <span>{item.label}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        {/* Main Content Area */}
+        <main className="flex-1 overflow-y-auto p-4 lg:p-8">
+          <div className="mx-auto max-w-full lg:max-w-6xl">
+            {children || <Outlet />}
+          </div>
         </main>
       </div>
+
+      <footer className="bg-background py-1 text-center text-sm text-muted-foreground">
+        <p>
+          &copy; {new Date().getFullYear()} Marcas Guatemala. Todos los derechos
+          reservados
+        </p>
+      </footer>
     </div>
   );
 }

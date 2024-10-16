@@ -64,7 +64,9 @@ export default function SellerHistory() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Historial de Entrada y Salida</h1>
+      <h1 className="text-2xl font-bold mb-6 text-center">
+        Historial de Entrada y Salida
+      </h1>
 
       <div className="overflow-x-auto shadow-xl">
         <Table>
@@ -104,7 +106,7 @@ export default function SellerHistory() {
                     ? format(new Date(registro.salida), "hh:mm a", {
                         locale: es,
                       })
-                    : "En curso"}
+                    : "Sin cerrar"}
                 </TableCell>
 
                 {/* Calcular y mostrar el tiempo total (diferencia entre salida y entrada) */}

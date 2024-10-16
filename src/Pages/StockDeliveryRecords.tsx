@@ -117,7 +117,13 @@ const DeliveryCard: React.FC<{ delivery: Delivery }> = ({ delivery }) => {
           <div>
             <h3 className="font-semibold">Detalles de la entrega</h3>
             <p>Fecha: {new Date(delivery.timestamp).toLocaleString()}</p>
-            <p>Total pagado: Q{delivery.total_pagado.toFixed(2)}</p>
+            <p>
+              Total pagado:{" "}
+              {new Intl.NumberFormat("es-GT", {
+                style: "currency",
+                currency: "GTQ",
+              }).format(delivery.total_pagado)}
+            </p>
           </div>
         </div>
         {isExpanded && (
@@ -141,9 +147,17 @@ const DeliveryCard: React.FC<{ delivery: Delivery }> = ({ delivery }) => {
                     <TableRow key={product.id}>
                       <TableCell>{product.producto.nombre}</TableCell>
                       <TableCell>{product.cantidad}</TableCell>
-                      <TableCell>Q{product.costoUnitario.toFixed(2)}</TableCell>
                       <TableCell>
-                        Q{(product.costoUnitario * product.cantidad).toFixed(2)}
+                        {new Intl.NumberFormat("es-GT", {
+                          style: "currency",
+                          currency: "GTQ",
+                        }).format(product.costoUnitario)}
+                      </TableCell>
+                      <TableCell>
+                        {new Intl.NumberFormat("es-GT", {
+                          style: "currency",
+                          currency: "GTQ",
+                        }).format(product.costoUnitario * product.cantidad)}
                       </TableCell>
 
                       <TableCell>{product.producto.codigoProducto}</TableCell>

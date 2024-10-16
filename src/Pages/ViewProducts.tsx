@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search, Filter, Edit, Plus } from "lucide-react";
+import { Search, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -8,12 +8,15 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "../components/ui/badge";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
-import { Link } from "react-router-dom";
-import { Product } from "../Utils/Types/Product";
+import SelectM, { MultiValue } from "react-select"; // Importación correcta de react-select
+
 import axios from "axios";
 import { toast } from "sonner";
 import {
@@ -26,37 +29,54 @@ import {
 
 const API_URL = import.meta.env.VITE_API_URL;
 // Mock product data
+// Tipos para Producto y Categoría
 type Producto = {
   id: number;
-  productoId: number;
-  categoriaId: number;
-  creadoEn: string;
-  actualizadoEn: string;
+  nombre: string;
+  codigoProducto: string;
+  descripcion: string;
+  precio: number;
+  categorias: { categoria: { id: number; nombre: string } }[]; // Incluyo el ID de categoría
+  stock: { cantidad: number };
 };
 
-export type CategoriaFiltrar = {
+// Estado para editar el producto
+interface ProductoEdit {
+  id: number;
+  nombre: string;
+  codigoProducto: string;
+  descripcion: string;
+  categoriaIds: number[]; // IDs de las categorías
+  precio: number;
+}
+
+type Categoria = {
   id: number;
   nombre: string;
   creadoEn: string;
   actualizadoEn: string;
-  productos: Producto[];
 };
 
 export default function ViewProducts() {
-  // const [selectedCategory, setSelectedCategory] = useState("Todas");
-  const [categoria, setCategoria] = useState<CategoriaFiltrar[]>([]);
-  const [products, setProducts] = useState<Product[]>([]); // Adjusted type
+  const [categoria, setCategoria] = useState<Categoria[]>([]);
+  const [products, setProducts] = useState<Producto[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Producto | null>(null);
+  const [editedProduct, setEditedProduct] = useState<ProductoEdit>({
+    nombre: "",
+    id: 0,
+    codigoProducto: "",
+    descripcion: "",
+    categoriaIds: [],
+    precio: 0,
+  });
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     category: "Todas",
-    size: "",
-    color: "",
     priceRange: [0, 300],
   });
 
-  // Fetch products from API
+  // Obtener productos desde el API
   const getProducts = async () => {
     try {
       const response = await axios.get(`${API_URL}/product`);
@@ -64,8 +84,8 @@ export default function ViewProducts() {
         setProducts(response.data);
       }
     } catch (error) {
-      console.log(error);
-      toast.error("No hay productos disponibles");
+      console.error(error);
+      toast.error("Error al cargar productos");
     }
   };
 
@@ -73,7 +93,26 @@ export default function ViewProducts() {
     getProducts();
   }, []);
 
-  // Filter products
+  // Obtener categorías desde el API
+  const getCategories = async () => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/categories/simple-categories`
+      );
+      if (response.status === 200) {
+        setCategoria(response.data);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Error al cargar categorías");
+    }
+  };
+
+  useEffect(() => {
+    getCategories();
+  }, []);
+
+  // Filtrar productos según filtros y búsqueda
   const filteredProducts = products.filter(
     (product) =>
       product.nombre.toLowerCase().includes(searchTerm.toLowerCase()) &&
@@ -85,24 +124,90 @@ export default function ViewProducts() {
         ))
   );
 
-  // Obtener clientes
+  // Manejar cambios en el formulario de edición
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditedProduct({
+      ...editedProduct,
+      [name]: name === "precio" ? Number(value) : value,
+    });
+  };
+
+  // Función para mostrar el producto en modo de edición
+  const handleEditProduct = (product: Producto) => {
+    // setSelectedProduct(product);
+    setEditedProduct({
+      id: product.id,
+      nombre: product.nombre,
+      codigoProducto: product.codigoProducto,
+      descripcion: product.descripcion,
+      categoriaIds: product.categorias.map((cat) => cat.categoria.id),
+      precio: product.precio,
+    });
+  };
+
+  // Función para mostrar los detalles del producto
+  const handleShowDetails = (product: Producto) => {
+    setSelectedProduct(product);
+  };
+
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+
   useEffect(() => {
     const getCategories = async () => {
       try {
-        const response = await axios.get(`${API_URL}/categories`);
+        const response = await axios.get(
+          `${API_URL}/categories/simple-categories`
+        );
         if (response.status === 200) {
-          setCategoria(response.data);
+          setCategorias(response.data);
         }
       } catch (error) {
-        console.error(error);
-        toast.error("No se encontraron clientes");
+        console.log(error);
+        toast.error("Error al pedir categorias");
       }
     };
-
     getCategories();
   }, []);
 
-  console.log(filters);
+  console.log("El producto a actualizar es: ", editedProduct);
+  const handleUpdateProducto = async () => {
+    try {
+      const response = await axios.patch(
+        `${API_URL}/product/${editedProduct?.id}`,
+        {
+          nombre: editedProduct.nombre,
+          categoriasIds: editedProduct.categoriaIds,
+          codigoProducto: editedProduct.codigoProducto,
+          descripcion: editedProduct.descripcion,
+          precio: editedProduct.precio,
+        }
+      );
+
+      if (response.status === 200 || response.status == 201) {
+        toast.success("Producto actualizado correctamente");
+
+        // Vuelve a cargar los productos después de actualizar
+        await getProducts();
+
+        // Limpia el producto seleccionado
+        setEditedProduct({
+          nombre: "",
+          id: 0,
+          codigoProducto: "",
+          descripcion: "",
+          categoriaIds: [],
+          precio: 0,
+        });
+        setSelectedProduct(null); // Cierra el modal o panel de edición
+      }
+    } catch (error) {
+      console.log(error);
+      toast.warning("Error al actualizar producto");
+    }
+  };
 
   return (
     <div className="container mx-auto p-4">
@@ -178,16 +283,17 @@ export default function ViewProducts() {
         </div>
       )}
 
+      {/* Renderizado de productos */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {filteredProducts.length > 0 ? (
           filteredProducts.map((product) => (
             <Card key={product.id} className="overflow-hidden">
               <CardContent className="p-4">
                 <h3 className="font-semibold text-lg mb-2">{product.nombre}</h3>
-                <p className="text-sm text-gray-500 mb-2">
+                <p className="text-sm  mb-2">
                   Código: {product.codigoProducto}
                 </p>
-                <p className="text-gray-600 mb-2">
+                <p className=" mb-2">
                   Precio Venta: Q{product.precio.toFixed(2)}
                 </p>
                 <div>
@@ -210,21 +316,118 @@ export default function ViewProducts() {
                     : "Fuera de Stock (0)"}
                 </Badge>
               </CardContent>
-              <CardFooter className=" p-4 flex justify-between">
+              <CardFooter className="p-4 flex justify-between">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setSelectedProduct(product)}
+                  onClick={() => handleShowDetails(product)}
                 >
                   Ver Detalles
                 </Button>
-                <Button
-                  variant="outline"
-                  size="default"
-                  className="text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
+
+                {/* Botón para abrir el dialog de edición */}
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="default"
+                      onClick={() => handleEditProduct(product)}
+                    >
+                      Editar
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Editar Producto</DialogTitle>
+                    </DialogHeader>
+                    <form className="space-y-4">
+                      <div className="flex flex-col">
+                        <Label htmlFor="nombre">Producto Nombre</Label>
+                        <Input
+                          id="nombre"
+                          name="nombre"
+                          value={editedProduct.nombre || ""}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      <div className="flex flex-col">
+                        <Label htmlFor="precio">Precio</Label>
+                        <Input
+                          id="precio"
+                          name="precio"
+                          type="number"
+                          value={editedProduct.precio || ""}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      <div className="flex flex-col">
+                        <Label htmlFor="codigoProducto">Producto Código</Label>
+                        <Input
+                          id="codigoProducto"
+                          name="codigoProducto"
+                          value={editedProduct.codigoProducto || ""}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      {/* Dropdown de categorías con selección múltiple */}
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="categorias" className="text-right">
+                          Categoría
+                        </Label>
+                        <div className="col-span-3">
+                          <SelectM
+                            placeholder="Seleccionar..."
+                            isMulti
+                            name="categorias"
+                            options={categorias.map((categoria) => ({
+                              value: categoria.id,
+                              label: categoria.nombre,
+                            }))}
+                            className="basic-multi-select text-black"
+                            classNamePrefix="select"
+                            onChange={(
+                              selectedOptions: MultiValue<{
+                                value: number;
+                                label: string;
+                              }>
+                            ) => {
+                              const selectedIds = selectedOptions.map(
+                                (option) => option.value
+                              );
+                              setEditedProduct({
+                                ...editedProduct,
+                                categoriaIds: selectedIds,
+                              });
+                            }}
+                            value={categorias
+                              .filter((categoria) =>
+                                editedProduct.categoriaIds.includes(
+                                  categoria.id
+                                )
+                              )
+                              .map((categoria) => ({
+                                value: categoria.id,
+                                label: categoria.nombre,
+                              }))}
+                          />
+                        </div>
+                      </div>
+                    </form>
+                    <DialogFooter className="space-x-2 mt-4">
+                      <DialogClose asChild>
+                        <Button
+                          variant="outline"
+                          onClick={() => setSelectedProduct(null)}
+                        >
+                          Cancelar
+                        </Button>
+                      </DialogClose>
+                      <Button onClick={handleUpdateProducto}>
+                        Guardar Cambios
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </CardFooter>
             </Card>
           ))
@@ -233,79 +436,58 @@ export default function ViewProducts() {
         )}
       </div>
 
-      {/* Pagination can be added here */}
-
+      {/* Dialog para mostrar detalles del producto */}
       <Dialog
         open={!!selectedProduct}
         onOpenChange={() => setSelectedProduct(null)}
       >
-        <DialogContent className="sm:max-w-[700px]">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>{selectedProduct?.nombre}</DialogTitle>
+            <DialogTitle>Detalles del Producto</DialogTitle>
           </DialogHeader>
-
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="">Código producto</Label>
-                <Input
-                  value={selectedProduct?.codigoProducto}
-                  readOnly
-                  className="w-full p-2 border rounded bg-white text-gray-700"
-                />
+          {selectedProduct && (
+            <>
+              <h3 className="font-semibold text-lg">
+                {selectedProduct.nombre}
+              </h3>
+              <p className="text-sm text-gray-500">
+                Código: {selectedProduct.codigoProducto}
+              </p>
+              <p className="text-gray-600">
+                Precio Venta: Q{selectedProduct.precio.toFixed(2)}
+              </p>
+              <p className="text-gray-600">
+                Descripción: {selectedProduct.descripcion}
+              </p>
+              <div className="mt-4">
+                <h4 className="font-semibold">Categorías:</h4>
+                {selectedProduct.categorias.map((cat, index) => (
+                  <Badge key={index} className="mt-2">
+                    {cat.categoria.nombre}
+                  </Badge>
+                ))}
               </div>
-              <div>
-                <Label className="">Categoría</Label>
-                <Input
-                  value={selectedProduct?.categorias
-                    .map((cat) => cat.categoria.nombre)
-                    .join(", ")}
-                  readOnly
-                  className="w-full p-2 border rounded bg-white text-gray-700 "
-                />
-              </div>
-              <div>
-                <Label className="">Precio</Label>
-                <Input
-                  value={`Q${selectedProduct?.precio.toFixed(2)}`}
-                  readOnly
-                  className="w-full p-2 border rounded bg-white text-gray-700"
-                />
-              </div>
-              <div>
-                <Label className="">Stock actual</Label>
-                <Input
-                  value={selectedProduct?.stock?.cantidad || 0}
-                  readOnly
-                  type="number"
-                  className="w-full p-2 border rounded bg-white text-gray-700"
-                />
-              </div>
-              <div>
-                <Label className="">Descripción</Label>
-                <textarea
-                  className="w-full p-2 border rounded bg-white text-gray-700"
-                  rows={3}
-                  defaultValue={
-                    selectedProduct?.descripcion || "Sin descripción"
-                  }
-                  readOnly
-                />
-              </div>
-            </div>
-          </div>
+              <Badge
+                variant={
+                  selectedProduct.stock && selectedProduct.stock.cantidad > 0
+                    ? "outline"
+                    : "destructive"
+                }
+                className="mt-2"
+              >
+                {selectedProduct.stock && selectedProduct.stock.cantidad > 0
+                  ? `En Stock (${selectedProduct.stock.cantidad})`
+                  : "Fuera de Stock (0)"}
+              </Badge>
+            </>
+          )}
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cerrar</Button>
+            </DialogClose>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <Link to={"/crear-productos"}>
-        <Button
-          className="fixed bottom-4 right-4 rounded-full shadow-lg"
-          size="lg"
-        >
-          <Plus className="mr-2" />
-          Crear Producto
-        </Button>
-      </Link>
     </div>
   );
 }

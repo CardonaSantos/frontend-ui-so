@@ -18,6 +18,8 @@ import {
   LocateIcon,
   ChevronUp,
   ChevronDown,
+  Tags,
+  MessageCircle,
 } from "lucide-react";
 import axios from "axios";
 
@@ -158,11 +160,6 @@ export default function ProspectoHistorial() {
     getDepartamentos();
   }, []);
 
-  const handleGenerarCliente = (prospectoId: number) => {
-    // Aquí iría la lógica para generar un cliente a partir del prospecto
-    console.log(`Generando cliente para el prospecto ${prospectoId}`);
-  };
-
   const getProspectos = async () => {
     try {
       const response = await axios.get<Prospecto[]>(`${API_URL}/prospecto`);
@@ -251,6 +248,61 @@ export default function ProspectoHistorial() {
     </div>
   );
 
+  const handleCreateCustomer = async (prospectoId: number) => {
+    const prospecto = prospectosFiltrados.find(
+      (prospecto) => prospecto.id == prospectoId
+    );
+
+    if (!prospecto) {
+      toast.info("No se puede generar el cliente");
+      return;
+    }
+
+    const newCustomer = {
+      prospectoId: prospectoId,
+      nombre: prospecto.nombreCompleto,
+      correo: prospecto.correo || "",
+      telefono: prospecto.telefono || "",
+      direccion: prospecto.direccion || "",
+      municipioId: prospecto.municipio.id || null,
+      departamentoId: prospecto.departamento.id || null,
+      tipoCliente: prospecto.tipoCliente,
+      volumenCompra: prospecto.volumenCompra,
+      presupuestoMensual: prospecto.presupuestoMensual,
+      preferenciaContacto: prospecto.preferenciaContacto,
+      categoriasInteres: prospecto.categoriasInteres,
+      comentarios: prospecto.comentarios || "",
+      latitud: prospecto.ubicacion.latitud || null,
+      longitud: prospecto.ubicacion.longitud || null,
+    };
+
+    toast.promise(
+      new Promise((resolve, reject) => {
+        setTimeout(async () => {
+          try {
+            const response = await axios.post(
+              `${API_URL}/customers/create-customer-from-prospect`,
+              newCustomer
+            );
+            if (response.status === 201) {
+              resolve("Usuario registrado con éxito");
+              getProspectos();
+            } else {
+              reject(new Error("Error al crear nuevo usuario"));
+            }
+          } catch (error) {
+            reject(new Error("Error al crear nuevo usuario"));
+          }
+        }, 1000); // Tiempo de espera de 2 segundos
+      }),
+      {
+        loading: "Registrando usuario...",
+        success: "Usuario registrado con éxito",
+        error: "Error al registrar usuario ",
+      }
+    );
+  };
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6">Registros de Prospectos</h1>
@@ -334,14 +386,31 @@ export default function ProspectoHistorial() {
         {prospectosFiltrados.map((prospecto) => (
           <Collapsible key={prospecto.id}>
             <div
-              className="cursor-pointer border rounded-lg p-4"
+              className="cursor-pointer border rounded-lg p-4 "
               onClick={() => toggleProspect(prospecto.id)}
             >
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {/* Nombre del Prospecto */}
+
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">
-                    Nombre
+                    Vendedor
+                  </p>
+                  <p>{prospecto.vendedor.nombre || "No especificado"}</p>
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Rol
+                  </p>
+                  <Badge className="bg-blue-600 text-white">
+                    {prospecto.vendedor.rol}
+                  </Badge>
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Cliente
                   </p>
                   <p>{prospecto.nombreCompleto || "No especificado"}</p>
                 </div>
@@ -368,9 +437,11 @@ export default function ProspectoHistorial() {
                     Estado
                   </p>
                   <Badge
-                    variant={
-                      prospecto.estado === "Activo" ? "default" : "secondary"
-                    }
+                    className={`${
+                      prospecto.estado === "EN_PROSPECTO"
+                        ? "bg-green-600 text-white"
+                        : "bg-violet-800 text-white"
+                    }`}
                   >
                     {prospecto.estado}
                   </Badge>
@@ -392,8 +463,8 @@ export default function ProspectoHistorial() {
             </div>
 
             <CollapsibleContent>
-              <div className="p-4 bg-muted rounded-md space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="px-4 bg-muted rounded-md space-y-2 pb-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
                   {/* Correo */}
                   {renderDetailRow(
                     <Mail className="h-4 w-4" />,
@@ -464,6 +535,20 @@ export default function ProspectoHistorial() {
                   )}
                 </div>
 
+                {/* Categorias intereses */}
+                {renderDetailRow(
+                  <Tags className="h-4 w-4" />,
+                  "Preferencias",
+                  prospecto.categoriasInteres.join(", ")
+                )}
+
+                {/* Categorias intereses */}
+                {renderDetailRow(
+                  <MessageCircle className="h-4 w-4" />,
+                  "Contacto",
+                  prospecto.preferenciaContacto
+                )}
+
                 {/* Notas */}
                 <div>
                   <h3 className="font-semibold mb-2">Notas:</h3>
@@ -491,13 +576,15 @@ export default function ProspectoHistorial() {
 
                 {/* Botón para generar cliente */}
                 <Button
-                  onClick={() => handleGenerarCliente(prospecto.id)}
-                  disabled={!prospecto.fin}
+                  onClick={() => handleCreateCustomer(prospecto.id)}
+                  disabled={
+                    !!prospecto.clienteId || prospecto.estado === "EN_PROSPECTO"
+                  }
                   className="w-full"
                 >
-                  {prospecto.fin
-                    ? "Generar Cliente"
-                    : "Esperando reporte final"}
+                  {prospecto.clienteId
+                    ? "Cliente ya generado"
+                    : "Generar Cliente"}
                 </Button>
               </div>
             </CollapsibleContent>
